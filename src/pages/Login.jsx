@@ -150,6 +150,8 @@ export default function Login() {
  <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Verify Your Email</h3>
  <p className="text-sm text-slate-500 mb-6 leading-relaxed">
  We've sent a professional verification link to <strong>{email}</strong>. Please check your inbox to activate your account.
+ <br /><br />
+ <span className="font-bold text-amber-600 dark:text-amber-500">⚠️ IMPORTANT:</span> If you don't see it within a minute, you <strong>must check your Spam or Junk folder</strong>!
  </p>
  <button onClick={() => { setVerificationSent(false); setIsSignUp(false); }} className="btn-secondary w-full">
  Return to Login
