@@ -3,11 +3,11 @@ import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Plus, Minus, X, Edit2, Trash2, BookOpen, Settings, Filter, Search, CloudLightning, Loader2, CheckCircle2 } from 'lucide-react';
+import { Plus, Minus, X, Edit2, Trash2, BookOpen, Settings, Filter, Search, CloudLightning, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 
 export default function Courses() {
- const { user, courses, setCourses, attendances, setAttendances, setActiveCourseId, globalYear, globalSemester, activeCourses, notes, setNotes } = useAuth();
+ const { user, courses, setCourses, attendances, setAttendances, setActiveCourseId, globalYear, globalSemester, activeCourses, notes, setNotes, masterDriveLinks, setMasterDriveLinks } = useAuth();
  const navigate = useNavigate();
  
  // Global Min Attendance
@@ -22,6 +22,7 @@ export default function Courses() {
  const [importStatus, setImportStatus] = useState('');
  const [importError, setImportError] = useState('');
  const [importReviewData, setImportReviewData] = useState(null);
+ const [masterFolderIdToSave, setMasterFolderIdToSave] = useState('');
  
  const [recentImportIds, setRecentImportIds] = useState(() => {
  try { return JSON.parse(localStorage.getItem('sh2_recent_import')) || []; } catch { return []; }
@@ -132,6 +133,7 @@ export default function Courses() {
  setIsImporting(false);
  setShowImport(false);
  setImportReviewData(parsedCourses);
+ setMasterFolderIdToSave(folderId);
  setImportStatus('');
  }, 500);
 
@@ -273,6 +275,11 @@ export default function Courses() {
  setRecentImportIds(addedCourseIds);
  }
  
+ if (masterFolderIdToSave && (!masterDriveLinks || !masterDriveLinks.includes(masterFolderIdToSave))) {
+ setMasterDriveLinks([...(masterDriveLinks || []), masterFolderIdToSave]);
+ }
+ setMasterFolderIdToSave('');
+ 
  setUndoAction({
  type: 'IMPORT',
  addedIds: addedCourseIds,
@@ -282,6 +289,112 @@ export default function Courses() {
 
  setImportReviewData(null);
  setDriveUrl('');
+ };
+
+ const handleRefreshMasterDrive = async () => {
+ if (!masterDriveLinks || masterDriveLinks.length === 0) {
+ alert("You haven't imported any Google Drive folders yet!");
+ return;
+ }
+
+ const today = new Date().toDateString();
+ let syncData = { count: 0, date: today };
+ try {
+ const stored = JSON.parse(localStorage.getItem('sh2_master_sync_limit'));
+ if (stored && stored.date === today) {
+ syncData = stored;
+ }
+ } catch(e) {}
+
+ if (syncData.count >= 2) {
+ alert("Daily limit reached! You can only refresh your Master Drive 2 times a day.");
+ return;
+ }
+
+ setIsImporting(true);
+ setImportStatus('Scanning Master Drive for new courses and files...');
+ setShowImport(true); // Open modal just to show the loading state
+ 
+ try {
+ const apiKey = "AIzaSyAemNiOsk0-GRkhJPXQfTVzKdIhCvabmtM"; 
+ let newCourses = [...courses];
+ let newNotes = [...notes];
+ let addedCourseCount = 0;
+ let addedFilesCount = 0;
+
+ for (const masterId of masterDriveLinks) {
+ const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${masterId}'+in+parents&fields=files(id,name,mimeType)&key=${apiKey}`);
+ if (!res.ok) continue;
+ 
+ const data = await res.json();
+ const folders = data.files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+ 
+ for (const folder of folders) {
+ let formattedName = folder.name;
+ const match = folder.name.match(/([a-zA-Z]+)\s*(\d+)/);
+ if (match) formattedName = `${match[1].toUpperCase()}${match[2]}`;
+ else formattedName = folder.name.trim().toUpperCase();
+
+ let courseId;
+ const existingCourse = newCourses.find(c => c.name.toLowerCase() === formattedName.toLowerCase());
+ 
+ if (!existingCourse) {
+ courseId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+ newCourses.push({
+ id: courseId,
+ name: formattedName,
+ teacherName: 'Imported from Drive',
+ totalClasses: 0,
+ year: globalYear,
+ semester: globalSemester,
+ driveFolderId: folder.id
+ });
+ addedCourseCount++;
+ } else {
+ courseId = existingCourse.id;
+ if (!existingCourse.driveFolderId) existingCourse.driveFolderId = folder.id;
+ }
+
+ const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folder.id}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,mimeType)&key=${apiKey}`);
+ if (filesRes.ok) {
+ const filesData = await filesRes.json();
+ const existingFileIds = newNotes.filter(n => n.courseId === courseId).map(n => n.driveFileId);
+ 
+ filesData.files.forEach(file => {
+ if (!existingFileIds.includes(file.id)) {
+ newNotes.push({
+ id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+ courseId: courseId,
+ title: file.name,
+ fileType: 'link',
+ content: `https://drive.google.com/file/d/${file.id}/view`,
+ downloadUrl: `https://drive.usercontent.google.com/u/0/uc?id=${file.id}&export=download`,
+ fileName: file.name,
+ driveFileId: file.id,
+ isBase64: false,
+ date: new Date().toLocaleDateString()
+ });
+ addedFilesCount++;
+ }
+ });
+ }
+ }
+ }
+
+ setCourses(newCourses);
+ setNotes(newNotes);
+
+ syncData.count += 1;
+ localStorage.setItem('sh2_master_sync_limit', JSON.stringify(syncData));
+ 
+ alert(`Master Sync Complete! Added ${addedCourseCount} new courses and ${addedFilesCount} new files.`);
+ } catch (err) {
+ alert("Failed to sync Master Drive.");
+ } finally {
+ setIsImporting(false);
+ setImportStatus('');
+ setShowImport(false);
+ }
  };
 
  const handleDeleteRecentImport = async (e) => {
@@ -390,6 +503,11 @@ export default function Courses() {
  {recentImportIds.length > 0 && (
  <button onClick={() => setShowDeleteRecent(true)} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 !bg-red-100 !text-red-700 dark:!bg-red-900/30 dark:!text-red-400 !border-red-200 dark:!border-red-800 flex items-center justify-center gap-1.5 flex-1 sm:flex-none">
  <Trash2 size={14} className="sm:w-4 sm:h-4" /> Undo Import
+ </button>
+ {masterDriveLinks && masterDriveLinks.length > 0 && (
+ <button onClick={handleRefreshMasterDrive} disabled={isImporting} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 !bg-blue-100 !text-blue-700 dark:!bg-blue-900/30 dark:!text-blue-400 !border-blue-200 dark:!border-blue-800 flex items-center justify-center gap-1.5 flex-1 sm:flex-none">
+ {isImporting ? <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin" /> : <CloudLightning size={14} className="sm:w-4 sm:h-4" />}
+ {isImporting ? 'Syncing...' : 'Refresh Drive'}
  </button>
  )}
  <button onClick={() => setShowAddCourse(true)} className="btn-primary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 flex-1 sm:flex-none justify-center">

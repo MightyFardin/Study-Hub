@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }) => {
   const [grades, setGrades] = useState(() => { const s = localStorage.getItem('sh2_grades'); return s ? JSON.parse(s) : []; });
   const [flashcards, setFlashcards] = useState(() => { const s = localStorage.getItem('sh2_flashcards'); return s ? JSON.parse(s) : []; });
   const [settings, setSettings] = useState(() => { const s = localStorage.getItem('sh2_settings'); return s ? JSON.parse(s) : { theme: 'system', accent: 'indigo' }; });
+  const [masterDriveLinks, setMasterDriveLinks] = useState(() => { const s = localStorage.getItem('sh2_master_drives'); return s ? JSON.parse(s) : []; });
 
   const [isFirebaseLoaded, setIsFirebaseLoaded] = useState(false);
   const [authConfirmed, setAuthConfirmed] = useState(false);
@@ -63,6 +64,7 @@ export const AuthProvider = ({ children }) => {
           if (data.grades && data.grades.length > 0) setGrades(data.grades);
           if (data.flashcards && data.flashcards.length > 0) setFlashcards(data.flashcards);
           if (data.settings) setSettings(data.settings);
+          if (data.masterDriveLinks) setMasterDriveLinks(data.masterDriveLinks);
           if (data.globalYear) setGlobalYear(data.globalYear);
           if (data.globalSemester) setGlobalSemester(data.globalSemester);
         } else {
@@ -93,6 +95,7 @@ export const AuthProvider = ({ children }) => {
         grades,
         flashcards,
         settings,
+        masterDriveLinks,
         globalYear,
         globalSemester
       }, { merge: true })
@@ -104,7 +107,7 @@ export const AuthProvider = ({ children }) => {
     }, 1500); // 1.5 second debounce
 
     return () => clearTimeout(timeoutId);
-  }, [courses, attendances, notes, assignments, timetable, grades, flashcards, settings, globalYear, globalSemester, isFirebaseLoaded, user, authConfirmed]);
+  }, [courses, attendances, notes, assignments, timetable, grades, flashcards, settings, masterDriveLinks, globalYear, globalSemester, isFirebaseLoaded, user, authConfirmed]);
 
   useEffect(() => localStorage.setItem('sh2_user', JSON.stringify(user)), [user]);
   
@@ -121,6 +124,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => localStorage.setItem('sh2_grades', JSON.stringify(grades)), [grades]);
   useEffect(() => localStorage.setItem('sh2_flashcards', JSON.stringify(flashcards)), [flashcards]);
   useEffect(() => localStorage.setItem('sh2_settings', JSON.stringify(settings)), [settings]);
+  useEffect(() => localStorage.setItem('sh2_master_drives', JSON.stringify(masterDriveLinks)), [masterDriveLinks]);
   
   useEffect(() => localStorage.setItem('sh2_global_year', globalYear), [globalYear]);
   useEffect(() => localStorage.setItem('sh2_global_semester', globalSemester), [globalSemester]);
@@ -162,6 +166,7 @@ export const AuthProvider = ({ children }) => {
       grades, setGrades,
       flashcards, setFlashcards,
       settings, setSettings,
+      masterDriveLinks, setMasterDriveLinks,
       globalYear, setGlobalYear,
       globalSemester, setGlobalSemester,
       activeCourses,
