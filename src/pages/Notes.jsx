@@ -134,20 +134,35 @@ export default function Notes() {
  const activeNotes = notes.filter(n => n.courseId === activeCourseId);
  const activeCourse = activeCourses.find(c => c.id === activeCourseId);
 
- React.useEffect(() => {
- if (activeCourse?.driveFolderId) {
- checkNewDriveFiles(activeCourse.driveFolderId, activeCourseId);
- } else {
- setNewDriveFiles([]);
+ const handleManualSync = () => {
+ if (!activeCourse?.driveFolderId) return;
+ 
+ const today = new Date().toDateString();
+ let syncData = { count: 0, date: today };
+ try {
+ const stored = JSON.parse(localStorage.getItem('sh2_drive_sync_limit'));
+ if (stored && stored.date === today) {
+ syncData = stored;
  }
- }, [activeCourseId, activeCourse?.driveFolderId]);
+ } catch(e) {}
+
+ if (syncData.count >= 2) {
+ alert("Daily limit reached! You can only sync with Google Drive 2 times a day to prevent API restrictions.");
+ return;
+ }
+
+ syncData.count += 1;
+ localStorage.setItem('sh2_drive_sync_limit', JSON.stringify(syncData));
+ 
+ checkNewDriveFiles(activeCourse.driveFolderId, activeCourseId);
+ };
 
  const checkNewDriveFiles = async (folderId, currentCourseId) => {
  try {
  setIsCheckingDrive(true);
  const apiKey = "AIzaSyAemNiOsk0-GRkhJPXQfTVzKdIhCvabmtM"; 
  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,mimeType)&key=${apiKey}`);
- if (!res.ok) return;
+ if (!res.ok) throw new Error("Fetch failed");
  
  const data = await res.json();
  // Re-filter notes to ensure we get the latest state for this course
@@ -158,9 +173,11 @@ export default function Notes() {
  setNewDriveFiles(newFiles);
  } else {
  setNewDriveFiles([]);
+ setTimeout(() => alert("All files are up to date! No new files found in Google Drive."), 100);
  }
  } catch (err) {
  console.error("Drive sync error:", err);
+ alert("Failed to sync with Google Drive.");
  } finally {
  setIsCheckingDrive(false);
  }
@@ -422,10 +439,17 @@ export default function Notes() {
  <h2 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight truncate">{activeCourse.name}</h2>
  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Course Materials</p>
  </div>
- </div>
- <button onClick={() => setShowUpload(true)} className="btn-primary text-sm py-2 px-4 shrink-0 w-full sm:w-auto flex items-center justify-center gap-1.5">
+ <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+ {activeCourse.driveFolderId && (
+ <button onClick={handleManualSync} disabled={isCheckingDrive} className="btn-secondary text-sm py-2 px-4 shrink-0 flex flex-1 sm:flex-none items-center justify-center gap-1.5 border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-400">
+ {isCheckingDrive ? <Loader2 size={16} className="animate-spin" /> : <CloudLightning size={16} />} 
+ {isCheckingDrive ? 'Syncing...' : 'Sync Drive'}
+ </button>
+ )}
+ <button onClick={() => setShowUpload(true)} className="btn-primary text-sm py-2 px-4 shrink-0 flex-1 sm:flex-none flex items-center justify-center gap-1.5">
  <Upload size={16} /> Upload Note
  </button>
+ </div>
  </div>
 
  <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
