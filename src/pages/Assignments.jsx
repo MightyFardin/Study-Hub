@@ -7,7 +7,7 @@ export default function Assignments() {
  const { activeCourses, assignments, setAssignments } = useAuth();
  
  const [showAdd, setShowAdd] = useState(false);
- const [newAssignment, setNewAssignment] = useState({ title: '', courseId: '', dueDate: '', type: 'Homework' });
+ const [newAssignment, setNewAssignment] = useState({ title: '', courseId: '', dueDate: '', type: 'Homework', description: '' });
 
  const courseOptions = activeCourses.map(c => ({ value: c.id, label: c.name }));
  const typeOptions = [
@@ -27,7 +27,7 @@ export default function Assignments() {
  completed: false
  }]);
  
- setNewAssignment({ title: '', courseId: '', dueDate: '', type: 'Homework' });
+ setNewAssignment({ title: '', courseId: '', dueDate: '', type: 'Homework', description: '' });
  setShowAdd(false);
  };
 
@@ -72,7 +72,8 @@ export default function Assignments() {
  </button>
  <div>
  <h3 className="font-bold text-slate-900 dark:text-white">{task.title}</h3>
- <div className="flex items-center gap-3 text-xs font-medium text-slate-500 mt-1">
+ {task.description && <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{task.description}</p>}
+ <div className="flex items-center gap-3 text-xs font-medium text-slate-500 mt-1.5">
  <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{getCourseName(task.courseId)}</span>
  <span className="text-indigo-500">{task.type}</span>
  <span className="flex items-center gap-1 text-orange-500"><Clock size={12} /> {new Date(task.dueDate).toLocaleDateString()}</span>
@@ -100,7 +101,8 @@ export default function Assignments() {
  </button>
  <div>
  <h3 className="font-bold text-slate-900 dark:text-white line-through">{task.title}</h3>
- <div className="flex items-center gap-3 text-xs font-medium text-slate-500 mt-1">
+ {task.description && <p className="text-sm text-slate-500 mt-1 line-clamp-1">{task.description}</p>}
+ <div className="flex items-center gap-3 text-xs font-medium text-slate-500 mt-1.5">
  <span>{getCourseName(task.courseId)}</span>
  <span>{task.type}</span>
  </div>
@@ -145,6 +147,11 @@ export default function Assignments() {
  <div>
  <label className="block text-sm font-medium mb-1">Due Date</label>
  <input required type="date" value={newAssignment.dueDate} onChange={e => setNewAssignment({...newAssignment, dueDate: e.target.value})} className="input-field" />
+ </div>
+ 
+ <div>
+ <label className="block text-sm font-medium mb-1">Description (Optional)</label>
+ <textarea value={newAssignment.description} onChange={e => setNewAssignment({...newAssignment, description: e.target.value})} className="input-field min-h-[80px] resize-y" placeholder="Add some details..." />
  </div>
  </div>
  <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] shrink-0">
