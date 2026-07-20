@@ -25,6 +25,9 @@ export default function Notes() {
  const [isProcessingLink, setIsProcessingLink] = useState(false);
  const [linkProcessError, setLinkProcessError] = useState('');
 
+ const [newDriveFiles, setNewDriveFiles] = useState([]);
+ const [isCheckingDrive, setIsCheckingDrive] = useState(false);
+
  // Ensure activeCourseId is valid for the current global context
  if (!activeCourseId && activeCourses.length > 0) {
  setActiveCourseId(activeCourses[0].id);
@@ -130,6 +133,56 @@ export default function Notes() {
 
  const activeNotes = notes.filter(n => n.courseId === activeCourseId);
  const activeCourse = activeCourses.find(c => c.id === activeCourseId);
+
+ React.useEffect(() => {
+ if (activeCourse?.driveFolderId) {
+ checkNewDriveFiles(activeCourse.driveFolderId, activeCourseId);
+ } else {
+ setNewDriveFiles([]);
+ }
+ }, [activeCourseId, activeCourse?.driveFolderId]);
+
+ const checkNewDriveFiles = async (folderId, currentCourseId) => {
+ try {
+ setIsCheckingDrive(true);
+ const apiKey = "AIzaSyAemNiOsk0-GRkhJPXQfTVzKdIhCvabmtM"; 
+ const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,mimeType)&key=${apiKey}`);
+ if (!res.ok) return;
+ 
+ const data = await res.json();
+ // Re-filter notes to ensure we get the latest state for this course
+ const existingFileIds = notes.filter(n => n.courseId === currentCourseId).map(n => n.driveFileId).filter(Boolean);
+ const newFiles = data.files.filter(f => !existingFileIds.includes(f.id));
+ 
+ if (newFiles.length > 0) {
+ setNewDriveFiles(newFiles);
+ } else {
+ setNewDriveFiles([]);
+ }
+ } catch (err) {
+ console.error("Drive sync error:", err);
+ } finally {
+ setIsCheckingDrive(false);
+ }
+ };
+
+ const handleAddNewDriveFiles = () => {
+ const additionalNotes = newDriveFiles.map(file => ({
+ id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+ courseId: activeCourseId,
+ title: file.name,
+ fileType: 'link',
+ content: `https://drive.google.com/file/d/${file.id}/view`,
+ downloadUrl: `https://drive.usercontent.google.com/u/0/uc?id=${file.id}&export=download`,
+ fileName: file.name,
+ driveFileId: file.id,
+ isBase64: false,
+ date: new Date().toLocaleDateString()
+ }));
+ 
+ setNotes(prev => [...prev, ...additionalNotes]);
+ setNewDriveFiles([]);
+ };
 
  const handleUpload = (e) => {
  e.preventDefault();
@@ -333,7 +386,26 @@ export default function Notes() {
  </div>
  </div>
 
- {/* Notes Area */}
+ {/* Auto-Sync Popup Modal */}
+ {newDriveFiles.length > 0 && (
+ <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+ <div className="bg-white dark:bg-[#111] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
+ <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-lg shadow-blue-500/20">
+ <CloudLightning size={32} />
+ </div>
+ <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">New Files Detected!</h3>
+ <p className="text-sm font-medium text-slate-500 mb-6 leading-relaxed">
+ We found <span className="font-bold text-slate-900 dark:text-white">{newDriveFiles.length} new files</span> in the Google Drive folder for this course. Would you like to add them now?
+ </p>
+ <div className="w-full flex gap-3">
+ <button onClick={() => setNewDriveFiles([])} className="btn-secondary flex-1 py-3">Ignore</button>
+ <button onClick={handleAddNewDriveFiles} className="btn-primary flex-1 py-3 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30">Add Files</button>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* Empty State */}
  <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl p-6 relative shadow-sm">
  {!activeCourse ? (
  <div className="flex-1 flex items-center justify-center text-center p-8">

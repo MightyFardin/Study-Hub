@@ -123,6 +123,7 @@ export default function Courses() {
  semester: globalSemester,
  conflictId: existing ? existing.id : null,
  action: existing ? 'skip' : 'add',
+ driveFolderId: folder.id,
  driveFiles
  };
  }));
@@ -233,14 +234,14 @@ export default function Courses() {
  let finalCourseId = item.id;
  
  if (item.action === 'add') {
- newCourses.push({ id: item.id, name: item.name, teacherName: item.teacherName, totalClasses: item.totalClasses, year: item.year, semester: item.semester });
+ newCourses.push({ id: item.id, name: item.name, teacherName: item.teacherName, totalClasses: item.totalClasses, year: item.year, semester: item.semester, driveFolderId: item.driveFolderId });
  addedCourseIds.push(item.id);
  } else if (item.action === 'replace') {
  const oldCourse = newCourses.find(c => c.id === item.conflictId);
  if (oldCourse) replacedCoursesBackups.push(oldCourse);
  
  newCourses = newCourses.filter(c => c.id !== item.conflictId);
- newCourses.push({ id: item.id, name: item.name, teacherName: item.teacherName, totalClasses: item.totalClasses, year: item.year, semester: item.semester });
+ newCourses.push({ id: item.id, name: item.name, teacherName: item.teacherName, totalClasses: item.totalClasses, year: item.year, semester: item.semester, driveFolderId: item.driveFolderId });
  addedCourseIds.push(item.id);
  } else {
  return;
@@ -256,6 +257,7 @@ export default function Courses() {
  content: `https://drive.google.com/file/d/${file.id}/view`,
  downloadUrl: `https://drive.usercontent.google.com/u/0/uc?id=${file.id}&export=download`,
  fileName: file.name,
+ driveFileId: file.id,
  isBase64: false,
  date: new Date().toLocaleDateString()
  });
