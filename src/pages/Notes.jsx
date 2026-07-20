@@ -439,6 +439,7 @@ export default function Notes() {
  <h2 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight truncate">{activeCourse.name}</h2>
  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Course Materials</p>
  </div>
+ </div>
  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
  {activeCourse.driveFolderId && (
  <button onClick={handleManualSync} disabled={isCheckingDrive} className="btn-secondary text-sm py-2 px-4 shrink-0 flex flex-1 sm:flex-none items-center justify-center gap-1.5 border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-400">

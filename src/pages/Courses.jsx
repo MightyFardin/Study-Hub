@@ -504,6 +504,7 @@ export default function Courses() {
  <button onClick={() => setShowDeleteRecent(true)} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 !bg-red-100 !text-red-700 dark:!bg-red-900/30 dark:!text-red-400 !border-red-200 dark:!border-red-800 flex items-center justify-center gap-1.5 flex-1 sm:flex-none">
  <Trash2 size={14} className="sm:w-4 sm:h-4" /> Undo Import
  </button>
+ )}
  {masterDriveLinks && masterDriveLinks.length > 0 && (
  <button onClick={handleRefreshMasterDrive} disabled={isImporting} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 !bg-blue-100 !text-blue-700 dark:!bg-blue-900/30 dark:!text-blue-400 !border-blue-200 dark:!border-blue-800 flex items-center justify-center gap-1.5 flex-1 sm:flex-none">
  {isImporting ? <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin" /> : <CloudLightning size={14} className="sm:w-4 sm:h-4" />}
