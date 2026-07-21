@@ -197,7 +197,7 @@ export default function Courses() {
  
  if (newPresent < 0) newPresent = 0;
  if (newPresent > course.totalClasses) {
- alert("You cannot have more attendance than the total classes held!");
+ setUndoAction({ type: 'INFO', message: "You cannot have more attendance than the total classes held!" });
  return;
  }
 
@@ -293,7 +293,7 @@ export default function Courses() {
 
  const handleRefreshMasterDrive = async () => {
  if (!masterDriveLinks || masterDriveLinks.length === 0) {
- alert("You haven't imported any Google Drive folders yet!");
+ setUndoAction({ type: 'INFO', message: "You haven't imported any Google Drive folders yet!" });
  return;
  }
 
@@ -307,7 +307,7 @@ export default function Courses() {
  } catch(e) {}
 
  if (syncData.count >= 2) {
- alert("Daily limit reached! You can only refresh your Master Drive 2 times a day.");
+ setUndoAction({ type: 'INFO', message: "Daily limit reached! You can only refresh your Master Drive 2 times a day." });
  return;
  }
 
@@ -387,9 +387,9 @@ export default function Courses() {
  syncData.count += 1;
  localStorage.setItem('sh2_master_sync_limit', JSON.stringify(syncData));
  
- alert(`Master Sync Complete! Added ${addedCourseCount} new courses and ${addedFilesCount} new files.`);
+ setUndoAction({ type: 'INFO', message: `Master Sync Complete! Added ${addedCourseCount} new courses and ${addedFilesCount} new files.` });
  } catch (err) {
- alert("Failed to sync Master Drive.");
+ setUndoAction({ type: 'INFO', message: "Failed to sync Master Drive." });
  } finally {
  setIsImporting(false);
  setImportStatus('');
@@ -525,7 +525,11 @@ export default function Courses() {
  {undoAction && (
  <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-4 animate-in slide-in-from-bottom-5 z-50">
  <span className="text-sm font-medium">{undoAction.message}</span>
+ {undoAction.type !== 'INFO' ? (
  <button onClick={handleUndo} className="text-indigo-400 hover:text-indigo-300 text-sm font-bold underline">Undo</button>
+ ) : (
+ <button onClick={() => setUndoAction(null)} className="text-slate-400 hover:text-white transition-colors"><X size={16} /></button>
+ )}
  </div>
  )}
 
