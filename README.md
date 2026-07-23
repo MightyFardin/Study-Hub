@@ -31,23 +31,6 @@ Study Hub is built to provide a centralized dashboard for academic life. It is d
 - **Study Tools** - Built-in Pomodoro timer and interactive flashcards for exam preparation.
 - **Cross-Platform Support** - Available as a Progressive Web App (PWA) and a native Android application via Capacitor.
 
-### Android Build
-
-To build the Android APK locally, execute the following commands:
-
-```bash
-# Build the web assets
-npm run build
-
-# Sync assets to Capacitor Android project
-npx cap sync android
-
-# Build the APK using Gradle
-cd android
-./gradlew assembleDebug
-```
-*The compiled APK will be output to `android/app/build/outputs/apk/debug/`.*
-
 ### Tech Stack
 
 - **Frontend:** React 18
