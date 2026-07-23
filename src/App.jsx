@@ -562,7 +562,7 @@ function App() {
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.16';
+  const currentVersion = '1.0.17';
 
   React.useEffect(() => {
 
@@ -605,6 +605,10 @@ function App() {
         if (permStatus.display === 'prompt') {
           await LocalNotifications.requestPermissions();
         }
+        
+        LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
+          console.log('Notification action performed', notificationAction);
+        });
       } catch (err) {
         // Not native or plugin missing
       }
