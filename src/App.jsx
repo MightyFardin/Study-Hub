@@ -551,6 +551,8 @@ function DashboardLayout({ children }) {
   );
 }
 
+import { SplashScreen } from '@capacitor/splash-screen';
+
 function App() {
   const { user, settings } = useAuth();
   const [isUnlocked, setIsUnlocked] = React.useState(() => {
@@ -558,6 +560,18 @@ function App() {
   });
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
+
+  React.useEffect(() => {
+    // Hide the splash screen smoothly once the app is ready
+    const hideSplash = async () => {
+      try {
+        await SplashScreen.hide();
+      } catch (err) {
+        console.log("Not running in native capacitor environment");
+      }
+    };
+    hideSplash();
+  }, []);
 
   if (user && settings?.twoFactor && !isUnlocked) {
     return (
