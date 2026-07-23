@@ -19,6 +19,12 @@ export default function Dashboard() {
 
   const globalMinAttendance = Number(localStorage.getItem('sh2_min_attendance')) || 75;
 
+  React.useEffect(() => {
+    import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+      setTimeout(() => SplashScreen.hide({ fadeOutDuration: 400 }).catch(() => {}), 100);
+    }).catch(() => {});
+  }, []);
+
   // Urgent Tasks
   const pendingTasks = (assignments || []).filter(a => !a.completed);
   const urgentTasks = pendingTasks.filter(a => {

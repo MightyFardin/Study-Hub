@@ -39,23 +39,53 @@ export default function Settings() {
  const [pinAction, setPinAction] = useState(''); // 'enable' or 'disable'
  const [pinError, setPinError] = useState('');
 
- const requestNotificationPermission = async (settingKey) => {
-   if (!("Notification" in window)) {
-     alert("This browser does not support push notifications.");
-     return;
-   }
-   if (!currentSettings[settingKey]) {
-     const permission = await Notification.requestPermission();
-     if (permission === "granted") {
-       updateSetting(settingKey, true);
-       new Notification("Study Hub", { body: "Notifications enabled successfully!" });
-     } else {
-       alert("Permission denied for push notifications.");
-     }
-   } else {
-     updateSetting(settingKey, false);
-   }
- };
+  const requestNotificationPermission = async (settingKey) => {
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      let permStatus = await LocalNotifications.checkPermissions();
+      
+      if (permStatus.display === 'prompt' || permStatus.display === 'denied') {
+        permStatus = await LocalNotifications.requestPermissions();
+      }
+
+      if (permStatus.display === 'granted') {
+        updateSetting(settingKey, true);
+        LocalNotifications.schedule({
+          notifications: [{
+            title: "Study Hub",
+            body: "Notifications enabled successfully!",
+            id: new Date().getTime(),
+            schedule: { at: new Date(Date.now() + 1000) },
+            sound: null,
+            attachments: null,
+            actionTypeId: "",
+            extra: null
+          }]
+        });
+      } else {
+        alert("Permission denied for push notifications.");
+        updateSetting(settingKey, false);
+      }
+    } catch (err) {
+      console.log("Capacitor Notifications not available, falling back to Web API", err);
+      // Fallback for web
+      if (!("Notification" in window)) {
+        alert("This browser does not support notifications.");
+        return;
+      }
+      if (!currentSettings[settingKey]) {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          updateSetting(settingKey, true);
+          new Notification("Study Hub", { body: "Notifications enabled successfully!" });
+        } else {
+          alert("Permission denied for notifications.");
+        }
+      } else {
+        updateSetting(settingKey, false);
+      }
+    }
+  };
 
  const handle2FAToggle = () => {
  setPinInput('');

@@ -9,6 +9,12 @@ import { Link } from 'react-router-dom';
 export default function Login() {
  const { login } = useAuth();
  
+ React.useEffect(() => {
+   import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+     setTimeout(() => SplashScreen.hide({ fadeOutDuration: 400 }).catch(() => {}), 100);
+   }).catch(() => {});
+ }, []);
+ 
  const [isSignUp, setIsSignUp] = useState(false);
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
