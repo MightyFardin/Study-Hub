@@ -562,7 +562,7 @@ function App() {
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.8';
+  const currentVersion = '1.0.9';
 
   React.useEffect(() => {
 
@@ -596,6 +596,19 @@ function App() {
     };
     // small delay to prevent blocking the splash screen hide
     setTimeout(checkForUpdates, 2000);
+
+    // Request notification permission on app launch if not already granted
+    setTimeout(async () => {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        const permStatus = await LocalNotifications.checkPermissions();
+        if (permStatus.display === 'prompt') {
+          await LocalNotifications.requestPermissions();
+        }
+      } catch (err) {
+        // Not native or plugin missing
+      }
+    }, 1500);
   }, []);
 
   if (updateAvailable) {

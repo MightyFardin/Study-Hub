@@ -40,6 +40,11 @@ export default function Settings() {
  const [pinError, setPinError] = useState('');
 
   const requestNotificationPermission = async (settingKey) => {
+    if (currentSettings[settingKey]) {
+      updateSetting(settingKey, false);
+      return;
+    }
+    
     try {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
       let permStatus = await LocalNotifications.checkPermissions();
