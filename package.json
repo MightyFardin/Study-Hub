@@ -1,7 +1,7 @@
 {
   "name": "study-app-clone",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -28,6 +28,7 @@
     "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.4.2",
     "@tailwindcss/typography": "^0.5.20",
     "@types/react": "^18.2.56",

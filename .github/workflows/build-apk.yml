@@ -27,6 +27,9 @@ jobs:
       - name: Build Web App
         run: npm run build
 
+      - name: Generate App Icons
+        run: npx @capacitor/assets generate
+
       - name: Sync Capacitor
         run: npx cap sync android
 
