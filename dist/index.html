@@ -39,7 +39,25 @@
         margin: 0;
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-ClutJV3A.js"></script>
+    <script>
+      (function() {
+        try {
+          const stored = localStorage.getItem('sh2_settings');
+          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          let theme = 'system';
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed.theme) theme = parsed.theme;
+          }
+          if (theme === 'dark' || (theme === 'system' && isDark)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.add('light');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-BymOOxi2.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-CVTPxh8h.css">
   </head>
   <body>

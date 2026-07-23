@@ -58,6 +58,13 @@ cd android
 - **Mobile Environment:** Capacitor v8
 - **Backend Services:** Firebase (Authentication, Firestore, Storage)
 
+### Support the Project
+
+If you find this project helpful, consider supporting its development! You can buy me a coffee via crypto:
+
+**USDT (TRC20 - Tron Network)**
+`THZHYBhVEHSvVjGNjPoHY1kkosxR52NcBm`
+
 ---
 
 <div align="center">

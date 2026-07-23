@@ -11,7 +11,8 @@
     },
     "LocalNotifications": {
       "smallIcon": "ic_stat_icon_config_sample",
-      "iconColor": "#4f46e5"
+      "iconColor": "#4f46e5",
+      "presentationOptions": ["badge", "sound", "alert"]
     }
   }
 }

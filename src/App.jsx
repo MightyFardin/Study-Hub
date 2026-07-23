@@ -602,8 +602,25 @@ function App() {
       try {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
         const permStatus = await LocalNotifications.checkPermissions();
+        let hasPermission = permStatus.display === 'granted';
+        
         if (permStatus.display === 'prompt') {
-          await LocalNotifications.requestPermissions();
+          const req = await LocalNotifications.requestPermissions();
+          hasPermission = req.display === 'granted';
+        }
+        
+        if (hasPermission) {
+          // Welcome notification
+          await LocalNotifications.schedule({
+            notifications: [
+              {
+                title: "Welcome to Study Hub!",
+                body: "Have a great and productive study session today. 🚀",
+                id: Math.floor(Math.random() * 100000),
+                schedule: { at: new Date(Date.now() + 1000) },
+              }
+            ]
+          });
         }
         
         LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
