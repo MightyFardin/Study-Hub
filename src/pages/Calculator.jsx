@@ -61,13 +61,13 @@ export default function Calculator() {
  return (
  <div className="max-w-4xl mx-auto animate-in fade-in flex flex-col lg:flex-row gap-8">
  
- <div className="flex-1 space-y-6">
+ <div className="flex-1 space-y-6 relative z-20">
  <div>
  <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">CGPA Calculator</h1>
  <p className="text-sm text-slate-500">Calculate your semester GPA by entering your grades below.</p>
  </div>
 
- <div className="card-minimal p-6 bg-white dark:bg-[#111]">
+ <div className="card-minimal p-6 bg-white dark:bg-[#111] relative z-30">
  <h2 className="text-lg font-bold mb-4">Add Course Grade</h2>
  <form onSubmit={handleAdd} className="space-y-4">
  <div>

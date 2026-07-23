@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }) => {
   // Dual-sync states (Local + Cloud)
   const [courses, setCourses] = useState(() => { const s = localStorage.getItem('sh2_courses'); return s ? JSON.parse(s) : []; });
   const [attendances, setAttendances] = useState(() => { const s = localStorage.getItem('sh2_attendances'); return s ? JSON.parse(s) : []; });
+  const [attendanceHistory, setAttendanceHistory] = useState(() => { const s = localStorage.getItem('sh2_attendanceHistory'); return s ? JSON.parse(s) : []; });
   const [notes, setNotes] = useState(() => { const s = localStorage.getItem('sh2_notes'); return s ? JSON.parse(s) : []; });
   const [assignments, setAssignments] = useState(() => { const s = localStorage.getItem('sh2_assignments'); return s ? JSON.parse(s) : []; });
   const [timetable, setTimetable] = useState(() => { const s = localStorage.getItem('sh2_timetable'); return s ? JSON.parse(s) : []; });
@@ -58,6 +59,7 @@ export const AuthProvider = ({ children }) => {
           // Merge strategy: if cloud has data, use it. Else keep local.
           if (data.courses && data.courses.length > 0) setCourses(data.courses);
           if (data.attendances && data.attendances.length > 0) setAttendances(data.attendances);
+          if (data.attendanceHistory && data.attendanceHistory.length > 0) setAttendanceHistory(data.attendanceHistory);
           if (data.notes && data.notes.length > 0) setNotes(data.notes);
           if (data.assignments && data.assignments.length > 0) setAssignments(data.assignments);
           if (data.timetable && data.timetable.length > 0) setTimetable(data.timetable);
@@ -89,6 +91,7 @@ export const AuthProvider = ({ children }) => {
       setDoc(docRef, {
         courses,
         attendances,
+        attendanceHistory,
         notes,
         assignments,
         timetable,
@@ -107,7 +110,7 @@ export const AuthProvider = ({ children }) => {
     }, 1500); // 1.5 second debounce
 
     return () => clearTimeout(timeoutId);
-  }, [courses, attendances, notes, assignments, timetable, grades, flashcards, settings, masterDriveLinks, globalYear, globalSemester, isFirebaseLoaded, user, authConfirmed]);
+  }, [courses, attendances, attendanceHistory, notes, assignments, timetable, grades, flashcards, settings, masterDriveLinks, globalYear, globalSemester, isFirebaseLoaded, user, authConfirmed]);
 
   useEffect(() => localStorage.setItem('sh2_user', JSON.stringify(user)), [user]);
   
@@ -118,6 +121,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => localStorage.setItem('sh2_courses', JSON.stringify(courses)), [courses]);
   useEffect(() => localStorage.setItem('sh2_attendances', JSON.stringify(attendances)), [attendances]);
+  useEffect(() => localStorage.setItem('sh2_attendanceHistory', JSON.stringify(attendanceHistory)), [attendanceHistory]);
   useEffect(() => localStorage.setItem('sh2_notes', JSON.stringify(notes)), [notes]);
   useEffect(() => localStorage.setItem('sh2_assignments', JSON.stringify(assignments)), [assignments]);
   useEffect(() => localStorage.setItem('sh2_timetable', JSON.stringify(timetable)), [timetable]);
@@ -160,6 +164,7 @@ export const AuthProvider = ({ children }) => {
       activeCourseId, setActiveCourseId,
       courses, setCourses,
       attendances, setAttendances,
+      attendanceHistory, setAttendanceHistory,
       notes, setNotes,
       assignments, setAssignments,
       timetable, setTimetable,

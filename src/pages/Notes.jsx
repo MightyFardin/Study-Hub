@@ -379,132 +379,147 @@ export default function Notes() {
  }
 
  return (
- <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 h-[calc(100vh-6rem)] relative">
+  <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 h-[calc(100vh-6rem)] relative">
  
- {/* Sidebar Course List */}
- <div className="w-full md:w-72 shrink-0 flex flex-col gap-4">
- <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin">
- <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 mt-2">Available Courses</h2>
- <div className="flex flex-col gap-2">
- {activeCourses.map(course => (
- <button 
- key={course.id}
- onClick={() => setActiveCourseId(course.id)}
- className={`text-left px-4 py-3 rounded-lg transition-all text-sm font-bold border ${
- activeCourseId === course.id 
- ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm border-transparent' 
- : 'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
- }`}
- >
- {course.name}
- </button>
- ))}
- </div>
- </div>
- </div>
+  {/* Sidebar Course List */}
+  <div className="w-full md:w-72 shrink-0 flex flex-col">
+    <div className="md:flex-1 md:overflow-y-auto md:pr-2 scrollbar-thin">
+      <h2 className="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-2 mt-2">Available Courses</h2>
+      
+      {/* Container: Wraps on mobile, Vertical on desktop */}
+      <div className="flex flex-wrap md:flex-col gap-2 pb-3 md:pb-0">
+        {activeCourses.map(course => (
+          <button 
+            key={course.id}
+            onClick={() => setActiveCourseId(course.id)}
+            className={`whitespace-normal text-left px-4 py-2.5 md:py-3 rounded-lg transition-colors duration-75 text-sm font-bold border grow sm:grow-0 md:grow-0 ${
+              activeCourseId === course.id 
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm border-transparent' 
+              : 'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#151515]'
+            }`}
+          >
+            {course.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
 
- {/* Auto-Sync Popup Modal */}
- {newDriveFiles.length > 0 && (
- <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
- <div className="bg-white dark:bg-[#111] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
- <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-lg shadow-blue-500/20">
- <CloudLightning size={32} />
- </div>
- <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">New Files Detected!</h3>
- <p className="text-sm font-medium text-slate-500 mb-6 leading-relaxed">
- We found <span className="font-bold text-slate-900 dark:text-white">{newDriveFiles.length} new files</span> in the Google Drive folder for this course. Would you like to add them now?
- </p>
- <div className="w-full flex gap-3">
- <button onClick={() => setNewDriveFiles([])} className="btn-secondary flex-1 py-3">Ignore</button>
- <button onClick={handleAddNewDriveFiles} className="btn-primary flex-1 py-3 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30">Add Files</button>
- </div>
- </div>
- </div>
- )}
+  {/* Auto-Sync Popup Modal */}
+  {newDriveFiles.length > 0 && (
+  <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+  <div className="bg-white dark:bg-[#111] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
+  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-lg shadow-blue-500/20">
+  <CloudLightning size={32} />
+  </div>
+  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">New Files Detected!</h3>
+  <p className="text-sm font-medium text-slate-500 mb-6 leading-relaxed">
+  We found <span className="font-bold text-slate-900 dark:text-white">{newDriveFiles.length} new files</span> in the Google Drive folder for this course. Would you like to add them now?
+  </p>
+  <div className="w-full flex gap-3">
+  <button onClick={() => setNewDriveFiles([])} className="btn-secondary flex-1 py-3">Ignore</button>
+  <button onClick={handleAddNewDriveFiles} className="btn-primary flex-1 py-3 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30">Add Files</button>
+  </div>
+  </div>
+  </div>
+  )}
 
- {/* Empty State */}
- <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl p-6 relative shadow-sm">
- {!activeCourse ? (
- <div className="flex-1 flex items-center justify-center text-center p-8">
- <p className="text-slate-500">Select a course to view notes.</p>
- </div>
- ) : (
- <>
- <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
- <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
- <div className="w-12 h-12 shrink-0 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-800">
- <BookOpen size={24} className="text-indigo-500" />
- </div>
- <div className="min-w-0 flex-1">
- <h2 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight truncate">{activeCourse.name}</h2>
- <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Course Materials</p>
- </div>
- </div>
- <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
- {activeCourse.driveFolderId && (
- <button onClick={handleManualSync} disabled={isCheckingDrive} className="btn-secondary text-sm py-2 px-4 shrink-0 flex flex-1 sm:flex-none items-center justify-center gap-1.5 border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-400">
- {isCheckingDrive ? <Loader2 size={16} className="animate-spin" /> : <CloudLightning size={16} />} 
- {isCheckingDrive ? 'Syncing...' : 'Sync Drive'}
- </button>
- )}
- <button onClick={() => setShowUpload(true)} className="btn-primary text-sm py-2 px-4 shrink-0 flex-1 sm:flex-none flex items-center justify-center gap-1.5">
- <Upload size={16} /> Upload Note
- </button>
- </div>
- </div>
+  {/* Empty State / Notes Area */}
+  <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm">
+    {!activeCourse ? (
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mb-3">
+          <BookOpen size={24} className="text-slate-300 dark:text-slate-600" />
+        </div>
+        <p className="text-slate-500 font-medium">Select a course to view notes.</p>
+      </div>
+    ) : (
+      <>
+        {/* Simple & Clean Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+            <div className="w-12 h-12 shrink-0 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+              <BookOpen size={20} className="text-indigo-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white leading-tight truncate">{activeCourse.name}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{activeNotes.length} Materials</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {activeCourse.driveFolderId && (
+              <button onClick={handleManualSync} disabled={isCheckingDrive} className="btn-secondary text-sm py-2 px-4 shrink-0 flex-1 sm:flex-none flex items-center justify-center gap-1.5 border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-400 h-10">
+                {isCheckingDrive ? <Loader2 size={16} className="animate-spin" /> : <CloudLightning size={16} />} 
+                {isCheckingDrive ? 'Syncing...' : 'Sync Drive'}
+              </button>
+            )}
+            <button onClick={() => setShowUpload(true)} className="btn-primary text-sm py-2 px-4 shrink-0 flex-1 sm:flex-none flex items-center justify-center gap-1.5 h-10">
+              <Upload size={16} /> Upload Note
+            </button>
+          </div>
+        </div>
 
- <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
- {activeNotes.length === 0 ? (
- <div className="text-center py-10 text-slate-500 text-sm">No notes uploaded for this course yet.</div>
- ) : (
- activeNotes.map(note => {
- const isDownloading = downloadingId === note.id;
- 
- return (
- <div key={note.id} className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-slate-100 dark:border-slate-800 rounded-lg hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#151515] transition-all gap-4">
- <div className="flex items-center gap-4 w-full sm:w-auto">
- <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
- {getIcon(note.fileType)}
- </div>
- <div className="flex-1 min-w-0">
- <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{note.title}</h4>
- <span className="text-xs font-medium text-slate-500 uppercase">{note.fileType} • {note.date}</span>
- </div>
- </div>
- 
- {isDownloading ? (
- <div className="flex items-center gap-3 w-full sm:w-auto bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
- <Loader2 size={16} className="animate-spin text-slate-500" />
- <div className="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
- <div className="h-full bg-slate-900 dark:bg-white transition-all duration-300" style={{ width: `${downloadProgress}%` }}></div>
- </div>
- <span className="text-xs font-bold w-8">{downloadProgress}%</span>
- </div>
- ) : (
- <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
- <button onClick={() => handleOpen(note)} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors flex items-center gap-1 text-sm font-medium" title={note.fileType === 'text' ? 'View Note' : 'Open in browser'}>
- {note.fileType === 'text' ? <Maximize2 size={16} /> : <ExternalLink size={16} />} 
- <span className="sm:hidden">{note.fileType === 'text' ? 'View' : 'Open'}</span>
- </button>
- <button onClick={() => handleDownload(note)} className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded transition-colors flex items-center gap-1 text-sm font-medium" title="Download">
- <Download size={16} /> <span className="sm:hidden">Download</span>
- </button>
- <button onClick={() => setNoteToDelete(note.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex items-center gap-1 text-sm font-medium ml-1" title="Delete Note">
- <Trash2 size={16} />
- </button>
- <button onClick={() => setEditingNote({...note, sourceType: note.isBase64 ? 'file' : (note.fileType === 'text' ? 'text' : 'link')})} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors flex items-center gap-1 text-sm font-medium ml-1" title="Edit Note">
- <Edit2 size={16} />
- </button>
- </div>
- )}
- </div>
- );
- })
- )}
- </div>
- </>
- )}
- </div>
+        {/* Clean, Scannable List */}
+        <div className="flex-1 overflow-y-auto space-y-2.5 pr-2 scrollbar-thin">
+          {activeNotes.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-sm font-medium">No notes uploaded for this course yet.</div>
+          ) : (
+            activeNotes.map(note => {
+              const isDownloading = downloadingId === note.id;
+              
+              return (
+                <div key={note.id} className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border border-slate-100 dark:border-slate-800 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800/50 hover:bg-slate-50 dark:hover:bg-[#151515] transition-all gap-4 shadow-sm hover:shadow-md cursor-default">
+                  
+                  <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto overflow-hidden">
+                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-[#111] shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-center shrink-0">
+                      {getIcon(note.fileType)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate pr-2">{note.title}</h4>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase tracking-widest">{note.fileType}</span>
+                        <span className="text-[11px] font-medium text-slate-400">• {note.date}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {isDownloading ? (
+                    <div className="flex items-center gap-3 w-full sm:w-auto bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
+                      <Loader2 size={16} className="animate-spin text-slate-500" />
+                      <div className="w-24 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-slate-900 dark:bg-white transition-all duration-300" style={{ width: `${downloadProgress}%` }}></div>
+                      </div>
+                      <span className="text-xs font-bold w-8">{downloadProgress}%</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+                      <button onClick={() => setEditingNote({...note, sourceType: note.isBase64 ? 'file' : (note.fileType === 'text' ? 'text' : 'link')})} className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors" title="Edit Note">
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => setNoteToDelete(note.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Delete Note">
+                        <Trash2 size={16} />
+                      </button>
+                      <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                      <button onClick={() => handleDownload(note)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Download">
+                        <Download size={18} />
+                      </button>
+                      <button onClick={() => handleOpen(note)} className="px-3 py-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/40 dark:text-indigo-400 rounded-lg transition-colors flex items-center gap-1.5 font-bold text-sm" title={note.fileType === 'text' ? 'View Note' : 'Open in browser'}>
+                        {note.fileType === 'text' ? <Maximize2 size={16} /> : <ExternalLink size={16} />} 
+                        <span className="hidden sm:inline">Open</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </>
+    )}
+  </div>
 
  {/* Upload Modal */}
  {showUpload && (

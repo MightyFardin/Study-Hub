@@ -3,11 +3,14 @@ import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Plus, Minus, X, Edit2, Trash2, BookOpen, Settings, Filter, Search, CloudLightning, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Plus, Minus, X, Edit2, Trash2, BookOpen, Settings, Filter, Search, CloudLightning, Loader2, CheckCircle2, RefreshCw, BarChart, MoreVertical } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
+import AttendanceAnalytics from '../components/AttendanceAnalytics';
+import GlobalAnalytics from '../components/GlobalAnalytics';
+import GlobalAttendanceCalendar from '../components/GlobalAttendanceCalendar';
 
 export default function Courses() {
- const { user, courses, setCourses, attendances, setAttendances, setActiveCourseId, globalYear, globalSemester, activeCourses, notes, setNotes, masterDriveLinks, setMasterDriveLinks } = useAuth();
+ const { user, courses, setCourses, attendances, setAttendances, setActiveCourseId, globalYear, globalSemester, activeCourses, notes, setNotes, masterDriveLinks, setMasterDriveLinks, attendanceHistory, setAttendanceHistory } = useAuth();
  const navigate = useNavigate();
  
  // Global Min Attendance
@@ -41,6 +44,10 @@ export default function Courses() {
 
  const [undoAction, setUndoAction] = useState(null);
  const [isEditingSettings, setIsEditingSettings] = useState(false);
+ const [showDropdown, setShowDropdown] = useState(false);
+ const [showDeleteCourseList, setShowDeleteCourseList] = useState(false);
+ const [activeTab, setActiveTab] = useState('courses');
+ const [analyticsCourse, setAnalyticsCourse] = useState(null);
 
  useEffect(() => {
  if (undoAction) {
@@ -225,6 +232,86 @@ export default function Courses() {
  }
  }
  };
+
+  const handleBatchUpdateHistory = (updates) => {
+    let newHistory = [...(attendanceHistory || [])];
+    let courseUpdates = {};
+    let attendanceUpdates = {};
+
+    updates.forEach(update => {
+      const { courseId, date, newStatus, existingRecordId } = update;
+      
+      // Remove existing record if present
+      if (existingRecordId) {
+        const oldRecord = newHistory.find(r => r.id === existingRecordId);
+        if (oldRecord) {
+          // decrement old status
+          if (oldRecord.status === 'present' || oldRecord.status === 'absent') {
+            courseUpdates[courseId] = (courseUpdates[courseId] || 0) - 1; // total classes decreased by 1
+            if (oldRecord.status === 'present') {
+              attendanceUpdates[courseId] = (attendanceUpdates[courseId] || 0) - 1; // present decreased by 1
+            }
+          }
+        }
+        newHistory = newHistory.filter(r => r.id !== existingRecordId);
+      }
+
+      // Add new record
+      if (newStatus) { // 'present' or 'absent'
+        newHistory.push({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          courseId,
+          date,
+          status: newStatus
+        });
+        
+        if (newStatus === 'present' || newStatus === 'absent') {
+          courseUpdates[courseId] = (courseUpdates[courseId] || 0) + 1; // total classes increased by 1
+          if (newStatus === 'present') {
+            attendanceUpdates[courseId] = (attendanceUpdates[courseId] || 0) + 1; // present increased by 1
+          }
+        }
+      }
+    });
+
+    setAttendanceHistory(newHistory);
+    
+    // Update courses total classes
+    if (Object.keys(courseUpdates).length > 0) {
+      setCourses(courses.map(c => {
+        if (courseUpdates[c.id] !== undefined) {
+          return { ...c, totalClasses: Math.max(0, c.totalClasses + courseUpdates[c.id]) };
+        }
+        return c;
+      }));
+    }
+    
+    // Update aggregate attendance
+    if (Object.keys(attendanceUpdates).length > 0) {
+      let newAttendances = [...(attendances || [])];
+      Object.keys(attendanceUpdates).forEach(courseId => {
+        const diff = attendanceUpdates[courseId];
+        if (diff === 0) return;
+        
+        let existing = newAttendances.find(a => a.courseId === courseId && a.studentId === user?.id);
+        if (existing) {
+          existing.present = Math.max(0, existing.present + diff);
+        } else if (diff > 0) {
+          newAttendances.push({
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            studentId: user?.id,
+            studentName: user?.name,
+            courseId: courseId,
+            present: diff
+          });
+        }
+      });
+      setAttendances(newAttendances);
+    }
+    
+    setUndoAction({ type: 'INFO', message: "Attendance saved successfully!" });
+  };
+
 
  const handleConfirmImport = () => {
  let newCourses = [...courses];
@@ -459,68 +546,99 @@ export default function Courses() {
  setActiveCourseId(courseId);
  navigate('/notes');
  };
-
- const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
+const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
  return (
  <div className="max-w-4xl mx-auto relative">
- <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 animate-in fade-in slide-in-from-bottom-4">
- <div>
- <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Courses & Attendance</h1>
- 
- <div className="flex items-center gap-2 mt-2 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-md shadow-sm w-fit">
- <span className="text-sm font-medium text-slate-500">Target Attendance:</span>
- {isEditingSettings ? (
- <div className="flex items-center gap-1">
- <input 
- type="number" min="1" max="100" 
- value={globalMinAttendance} 
- onChange={e => setGlobalMinAttendance(e.target.value)}
- className="w-14 bg-slate-100 dark:bg-slate-800 rounded px-1.5 py-0.5 text-sm font-bold border-none outline-none"
- />
- <span className="text-sm font-bold text-slate-400">%</span>
- <button onClick={handleUpdateGlobalSettings} className="ml-2 text-indigo-500 hover:text-indigo-600 text-sm font-bold">Save</button>
- </div>
- ) : (
- <div className="flex items-center gap-1.5">
- <span className="text-sm font-bold text-slate-900 dark:text-white">{globalMinAttendance}%</span>
- <button onClick={() => setIsEditingSettings(true)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
- <Settings size={14} />
- </button>
- </div>
- )}
- </div>
- </div>
+  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-4 relative z-40">
+    <div className="flex items-center justify-between w-full sm:w-auto">
+      <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Attendance<span className="text-indigo-500">.</span></h1>
+      
+      {/* 3 dots menu button for Mobile (visible on small screens) */}
+      <button onClick={() => setShowDropdown(!showDropdown)} className="sm:hidden p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-[#1a1a1a] dark:hover:bg-[#222] text-slate-500">
+        <MoreVertical size={20} />
+      </button>
+    </div>
 
- <div className="flex flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0 overflow-hidden">
- <div className="flex overflow-x-auto pb-2 sm:pb-0 custom-scrollbar items-center gap-2 w-full">
- <button onClick={() => setIsEditingSettings(true)} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 flex-1 sm:flex-none justify-center">
- <Settings size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Global Minimum:</span><span className="sm:hidden">Min:</span> {globalMinAttendance}%
- </button>
- <button onClick={() => setShowImport(true)} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 !bg-amber-100 !text-amber-700 dark:!bg-amber-900/30 dark:!text-amber-400 !border-amber-200 dark:!border-amber-800 flex items-center justify-center gap-1.5 flex-1 sm:flex-none">
- <CloudLightning size={14} className="sm:w-4 sm:h-4" /> Import
- </button>
- {recentImportIds.length > 0 && (
- <button onClick={() => setShowDeleteRecent(true)} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 !bg-red-100 !text-red-700 dark:!bg-red-900/30 dark:!text-red-400 !border-red-200 dark:!border-red-800 flex items-center justify-center gap-1.5 flex-1 sm:flex-none">
- <Trash2 size={14} className="sm:w-4 sm:h-4" /> Undo Import
- </button>
- )}
- {masterDriveLinks && masterDriveLinks.length > 0 && (
- <button onClick={handleRefreshMasterDrive} disabled={isImporting} className="btn-secondary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 !bg-blue-100 !text-blue-700 dark:!bg-blue-900/30 dark:!text-blue-400 !border-blue-200 dark:!border-blue-800 flex items-center justify-center gap-1.5 flex-1 sm:flex-none">
- {isImporting ? <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin" /> : <CloudLightning size={14} className="sm:w-4 sm:h-4" />}
- {isImporting ? 'Syncing...' : 'Refresh Drive'}
- </button>
- )}
- <button onClick={() => setShowAddCourse(true)} className="btn-primary text-xs sm:text-sm shrink-0 py-2 sm:py-2.5 px-3 flex-1 sm:flex-none justify-center">
- <Plus size={14} className="sm:w-4 sm:h-4" /> Add Course
- </button>
- </div>
- </div>
- </div>
+    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+      {/* Tab Switcher */}
+      <div className="flex bg-slate-100 dark:bg-[#1a1a1a] p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-800 w-full sm:w-auto">
+        <button 
+          onClick={() => setActiveTab('courses')}
+          className={`flex-1 sm:w-32 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'courses' ? 'bg-white dark:bg-[#222] text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+        >
+          <BookOpen size={16} /> Track
+        </button>
+        <button 
+          onClick={() => setActiveTab('analytics')}
+          className={`flex-1 sm:w-32 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'analytics' ? 'bg-white dark:bg-[#222] text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+        >
+          <BarChart size={16} /> Stats
+        </button>
+      </div>
 
- <div className="flex items-center gap-2 mb-4 text-sm font-medium text-slate-500 lg:hidden">
- <Filter size={14} /> Showing: {globalYear} &rarr; {globalSemester}
- </div>
+      {/* 3 dots menu button for Desktop */}
+      <div className="hidden sm:block relative">
+        <button onClick={() => setShowDropdown(!showDropdown)} className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-[#1a1a1a] dark:hover:bg-[#222] text-slate-500 transition-colors">
+          <MoreVertical size={20} />
+        </button>
+      </div>
+    </div>
+
+    {/* Dropdown Menu */}
+    {showDropdown && (
+      <>
+        <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)}></div>
+        <div className="absolute top-14 sm:top-14 right-0 sm:right-0 mt-1 w-64 bg-white dark:bg-[#151515] rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95">
+          <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#111]/50">
+             <div className="text-xs font-bold text-slate-400 mb-2 px-1">Global Target</div>
+             <div className="flex items-center gap-2">
+               <input 
+                 type="number" min="1" max="100" 
+                 value={globalMinAttendance} 
+                 onChange={e => setGlobalMinAttendance(e.target.value)}
+                 className="w-16 bg-white dark:bg-black rounded-lg px-2 py-1.5 text-sm font-bold border border-slate-200 dark:border-slate-700 outline-none text-center shadow-sm"
+               />
+               <span className="text-sm font-bold text-slate-500">%</span>
+               <button onClick={() => {handleUpdateGlobalSettings(); setShowDropdown(false);}} className="ml-auto text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">Save</button>
+             </div>
+          </div>
+          
+          <div className="p-1.5">
+            <button onClick={() => {setShowAddCourse(true); setShowDropdown(false);}} className="w-full text-left px-3 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#222] rounded-lg flex items-center gap-2.5 transition-colors">
+              <Plus size={16} /> Add Course
+            </button>
+            <button onClick={() => {setShowDeleteCourseList(true); setShowDropdown(false);}} className="w-full text-left px-3 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#222] rounded-lg flex items-center gap-2.5 transition-colors">
+              <Edit2 size={16} /> Manage Courses
+            </button>
+            
+            <div className="my-1.5 border-t border-slate-100 dark:border-slate-800"></div>
+
+            <button onClick={() => {setShowImport(true); setShowDropdown(false);}} className="w-full text-left px-3 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#222] rounded-lg flex items-center gap-2.5 transition-colors">
+              <CloudLightning size={16} /> Import from Drive
+            </button>
+            
+            {(recentImportIds.length > 0 || (masterDriveLinks && masterDriveLinks.length > 0)) && (
+              <div className="my-1.5 border-t border-slate-100 dark:border-slate-800"></div>
+            )}
+            
+            {recentImportIds.length > 0 && (
+              <button onClick={() => {setShowDeleteRecent(true); setShowDropdown(false);}} className="w-full text-left px-3 py-2.5 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg flex items-center gap-2.5 transition-colors">
+                <Trash2 size={16} /> Undo Recent Import
+              </button>
+            )}
+            
+            {masterDriveLinks && masterDriveLinks.length > 0 && (
+              <button onClick={() => {handleRefreshMasterDrive(); setShowDropdown(false);}} disabled={isImporting} className="w-full text-left px-3 py-2.5 text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg flex items-center gap-2.5 transition-colors">
+                {isImporting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} 
+                {isImporting ? 'Syncing...' : 'Refresh Master Drive'}
+              </button>
+            )}
+          </div>
+        </div>
+      </>
+    )}
+  </div>
 
  {undoAction && (
  <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-4 animate-in slide-in-from-bottom-5 z-50">
@@ -533,79 +651,32 @@ export default function Courses() {
  </div>
  )}
 
- {activeCourses.length === 0 ? (
+ {activeTab === 'analytics' ? (
+    <GlobalAnalytics 
+      activeCourses={activeCourses}
+      attendanceHistory={attendanceHistory}
+      globalMinAttendance={globalMinAttendance}
+      onUpdateHistory={(courseId, dateStr, newStatus, existingRecordId) => handleBatchUpdateHistory([{ courseId, date: dateStr, newStatus, existingRecordId }])}
+    />
+  ) : (
+    <>
+      {activeCourses.length > 0 && (
+        <GlobalAttendanceCalendar 
+          activeCourses={activeCourses} 
+          attendanceHistory={attendanceHistory} 
+          onBatchUpdateHistory={handleBatchUpdateHistory} 
+        />
+      )}
+
+      {activeCourses.length === 0 ? (
  <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50">
  <BookOpen size={48} className="text-slate-300 mb-4" />
  <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-1">No Courses Yet</h3>
  <p className="text-sm text-slate-500">No courses added in {globalYear}, {globalSemester} yet.</p>
  </div>
- ) : (
- <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-4">
- {activeCourses.map(course => {
- const myAttendance = getStudentAttendance(course.id);
- const status = calculateStatus(myAttendance, course.totalClasses);
-
- return (
- <div key={course.id} className="card-minimal flex flex-col overflow-hidden bg-white dark:bg-[#111] hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
- <div className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
- 
- {/* Course Info */}
- <div className="flex-1 cursor-pointer group active:scale-[0.98] transition-transform origin-left" onClick={() => openNotes(course.id)}>
- <div className="flex items-center gap-3 mb-1">
- <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-indigo-500 transition-colors">{course.name}</h3>
- <span className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
- <BookOpen size={14} /> Open Notes
- </span>
- </div>
- <p className="text-sm font-medium text-slate-500 mb-2">Teacher: <span className="text-slate-700 dark:text-slate-300 font-semibold">{course.teacherName || 'TBA'}</span></p>
- 
- <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
- <div className="text-sm font-medium text-slate-500 bg-slate-50 dark:bg-[#1a1a1a] border border-slate-100 dark:border-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2">
- Total Classes:
- <div className="flex items-center gap-1">
- <button onClick={() => updateCourseClasses(course.id, -1)} className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors active:scale-90"><Minus size={14}/></button>
- <span className="font-extrabold text-slate-900 dark:text-white w-5 text-center">{course.totalClasses}</span>
- <button onClick={() => updateCourseClasses(course.id, 1)} className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors active:scale-90"><Plus size={14}/></button>
- </div>
- </div>
- </div>
- </div>
-
- {/* Student View */}
- <div onClick={e => e.stopPropagation()} className="flex flex-col items-end gap-2 cursor-default">
- <div className="flex items-center gap-3 bg-slate-50 dark:bg-[#151515] p-2 rounded-lg border border-slate-100 dark:border-slate-800">
- <span className="text-sm font-semibold text-slate-500 ml-1">My Present:</span>
- <button onClick={() => updateStudentAttendance(course.id, -1)} disabled={myAttendance <= 0} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white active:scale-95 transition-all disabled:opacity-50 shadow-sm">
- <Minus size={16} />
- </button>
- <span className="font-black text-lg w-6 text-center text-slate-900 dark:text-white">{myAttendance}</span>
- <button onClick={() => updateStudentAttendance(course.id, 1)} disabled={myAttendance >= course.totalClasses} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 active:scale-95 transition-all disabled:opacity-50 shadow-sm">
- <Plus size={16} />
- </button>
- </div>
- 
- {status.status === 'safe' ? (
- <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-900/50 px-2 py-1 rounded-md">Safe skip: {status.canSkip}</span>
- ) : (
- <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-100 dark:bg-red-900/20 dark:border-red-900/50 px-2 py-1 rounded-md">Must attend next: {status.needAttend}</span>
- )}
- </div>
-
- {/* Edit/Delete Actions */}
- <div onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 ml-4">
- <button onClick={() => { setEditCourseData(course); setEditingCourseId(course.id); }} className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors" title="Edit">
- <Edit2 size={18} />
- </button>
- <button onClick={() => handleDeleteCourse(course.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Delete">
- <Trash2 size={18} />
- </button>
- </div>
- </div>
- </div>
- );
- })}
- </div>
- )}
+ ) : null}
+ </>
+  )}
 
  {/* Add Course Modal */}
  {showAddCourse && (
@@ -664,6 +735,59 @@ export default function Courses() {
  </div>
  <button type="submit" className="btn-primary w-full mt-2">Update Course</button>
  </form>
+ </div>
+ </div>
+ )}
+
+ {/* Manage Courses List Modal */}
+ {showDeleteCourseList && (
+ <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-50 flex items-center justify-center p-4">
+ <div className="card-minimal w-full max-w-sm p-0 animate-in zoom-in-95 bg-white dark:bg-[#111] max-h-[80vh] flex flex-col overflow-hidden rounded-2xl shadow-2xl">
+ <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] shrink-0">
+ <div>
+ <h2 className="text-lg font-bold text-slate-900 dark:text-white">Manage Courses</h2>
+ <p className="text-xs font-medium text-slate-500 mt-0.5">Edit or delete existing courses</p>
+ </div>
+ <button onClick={() => setShowDeleteCourseList(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800"><X size={20} /></button>
+ </div>
+ 
+ <div className="p-4 overflow-y-auto custom-scrollbar flex-1 min-h-0 space-y-2">
+ {activeCourses.length === 0 ? (
+ <p className="text-center text-sm text-slate-500 py-8">No courses available.</p>
+ ) : (
+ activeCourses.map(course => (
+ <div key={course.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#111] hover:border-slate-200 dark:hover:border-slate-700 transition-colors">
+ <div className="flex-1 min-w-0 pr-3">
+ <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{course.name}</h3>
+ <p className="text-xs text-slate-500 truncate">{course.teacherName}</p>
+ </div>
+ <div className="flex items-center gap-1 shrink-0">
+ <button 
+ onClick={() => {
+ setShowDeleteCourseList(false);
+ setEditCourseData(course);
+ setEditingCourseId(course.id);
+ }} 
+ className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"
+ title="Edit Course"
+ >
+ <Edit2 size={18} />
+ </button>
+ <button 
+ onClick={() => {
+ setShowDeleteCourseList(false);
+ handleDeleteCourse(course.id);
+ }} 
+ className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+ title="Delete Course"
+ >
+ <Trash2 size={18} />
+ </button>
+ </div>
+ </div>
+ ))
+ )}
+ </div>
  </div>
  </div>
  )}
