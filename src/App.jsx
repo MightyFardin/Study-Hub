@@ -22,7 +22,8 @@ import {
   X,
   Bell,
   FileText,
-  ChevronRight
+  ChevronRight,
+  DownloadCloud
 } from 'lucide-react';
 import CustomSelect from './components/CustomSelect';
 
@@ -560,6 +561,8 @@ function App() {
   });
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
+  const [updateAvailable, setUpdateAvailable] = React.useState(false);
+  const currentVersion = '1.0.0';
 
   React.useEffect(() => {
     // Hide the splash screen smoothly once the app is ready
@@ -571,7 +574,55 @@ function App() {
       }
     };
     hideSplash();
+
+    // Check for app updates
+    const checkForUpdates = async () => {
+      try {
+        const res = await fetch('https://raw.githubusercontent.com/MightyFardin/Study-Hub/main/package.json', { cache: 'no-store' });
+        const data = await res.json();
+        
+        const remoteParts = data.version.split('.').map(Number);
+        const localParts = currentVersion.split('.').map(Number);
+        
+        let hasUpdate = false;
+        for (let i = 0; i < Math.max(remoteParts.length, localParts.length); i++) {
+           const r = remoteParts[i] || 0;
+           const l = localParts[i] || 0;
+           if (r > l) {
+              hasUpdate = true;
+              break;
+           } else if (r < l) {
+              break;
+           }
+        }
+        
+        if (hasUpdate) {
+           setUpdateAvailable(true);
+        }
+      } catch (err) {
+        console.log("Failed to check for updates");
+      }
+    };
+    // small delay to prevent blocking the splash screen hide
+    setTimeout(checkForUpdates, 2000);
   }, []);
+
+  if (updateAvailable) {
+    return (
+      <div className="min-h-screen bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] fixed inset-0">
+        <div className="bg-white dark:bg-[#111] p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 border border-indigo-500/30">
+          <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner shadow-indigo-500/20 border border-indigo-100 dark:border-indigo-500/30">
+             <DownloadCloud size={40} className="text-indigo-500 animate-bounce" />
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Update Available!</h2>
+          <p className="text-slate-500 text-sm font-medium mb-6">A new version of Study Hub is available. You must update to continue using the app.</p>
+          <a href="https://github.com/MightyFardin/Study-Hub/actions" target="_blank" rel="noopener noreferrer" className="btn-primary w-full py-4 text-base shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
+            Download Update
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (user && settings?.twoFactor && !isUnlocked) {
     return (

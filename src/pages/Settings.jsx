@@ -22,7 +22,8 @@ export default function Settings() {
  theme: 'light',
  appStyle: 'minimalist',
  emailNotif: true,
- pushNotif: false,
+ timetableNotif: true,
+ assignmentNotif: true,
  twoFactor: false,
  pinCode: '',
  ...settings
@@ -38,22 +39,22 @@ export default function Settings() {
  const [pinAction, setPinAction] = useState(''); // 'enable' or 'disable'
  const [pinError, setPinError] = useState('');
 
- const handlePushNotifToggle = async () => {
- if (!currentSettings.pushNotif) {
- if (!("Notification" in window)) {
- alert("This browser does not support push notifications.");
- return;
- }
- const permission = await Notification.requestPermission();
- if (permission === "granted") {
- updateSetting('pushNotif', true);
- new Notification("Study Hub", { body: "Push notifications enabled successfully!" });
- } else {
- alert("Permission denied for push notifications.");
- }
- } else {
- updateSetting('pushNotif', false);
- }
+ const requestNotificationPermission = async (settingKey) => {
+   if (!("Notification" in window)) {
+     alert("This browser does not support push notifications.");
+     return;
+   }
+   if (!currentSettings[settingKey]) {
+     const permission = await Notification.requestPermission();
+     if (permission === "granted") {
+       updateSetting(settingKey, true);
+       new Notification("Study Hub", { body: "Notifications enabled successfully!" });
+     } else {
+       alert("Permission denied for push notifications.");
+     }
+   } else {
+     updateSetting(settingKey, false);
+   }
  };
 
  const handle2FAToggle = () => {
@@ -241,11 +242,21 @@ export default function Settings() {
  </div>
  <div className="flex items-center justify-between">
  <div>
- <p className="font-bold text-sm">Push Notifications</p>
- <p className="text-xs text-slate-500 mt-1">Get notified about upcoming classes and tasks.</p>
+ <p className="font-bold text-sm">Timetable Notifications</p>
+ <p className="text-xs text-slate-500 mt-1">Get notified about upcoming classes and routine changes.</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer">
- <input type="checkbox" className="sr-only peer" checked={currentSettings.pushNotif} onChange={handlePushNotifToggle} />
+ <input type="checkbox" className="sr-only peer" checked={currentSettings.timetableNotif} onChange={() => requestNotificationPermission('timetableNotif')} />
+ <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
+ </label>
+ </div>
+ <div className="flex items-center justify-between">
+ <div>
+ <p className="font-bold text-sm">Assignment Notifications</p>
+ <p className="text-xs text-slate-500 mt-1">Get reminders for upcoming assignment deadlines.</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer">
+ <input type="checkbox" className="sr-only peer" checked={currentSettings.assignmentNotif} onChange={() => requestNotificationPermission('assignmentNotif')} />
  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
  </label>
  </div>
