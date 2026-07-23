@@ -562,14 +562,14 @@ function App() {
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.7';
+  const currentVersion = '1.0.8';
 
   React.useEffect(() => {
 
     // Check for app updates
     const checkForUpdates = async () => {
       try {
-        const res = await fetch('https://raw.githubusercontent.com/MightyFardin/Study-Hub/main/package.json', { cache: 'no-store' });
+        const res = await fetch('https://study-hub-beta-six.vercel.app/version.json', { cache: 'no-store' });
         const data = await res.json();
         
         const remoteParts = data.version.split('.').map(Number);

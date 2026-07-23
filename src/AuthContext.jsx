@@ -167,6 +167,85 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/';
   };
 
+  // Sync Notifications
+  useEffect(() => {
+    const syncNotifs = async () => {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        const permStatus = await LocalNotifications.checkPermissions();
+        if (permStatus.display !== 'granted') return;
+
+        // Cancel all existing
+        const pending = await LocalNotifications.getPending();
+        if (pending.notifications.length > 0) {
+          await LocalNotifications.cancel(pending);
+        }
+
+        const notificationsToSchedule = [];
+        let notifId = 1;
+
+        // Schedule Timetable
+        if (settings.timetableNotif && timetable.length > 0) {
+          const daysMap = { 'Sunday': 1, 'Monday': 2, 'Tuesday': 3, 'Wednesday': 4, 'Thursday': 5, 'Friday': 6, 'Saturday': 7 };
+          
+          timetable.forEach(cls => {
+            const dayNum = daysMap[cls.day];
+            if (!dayNum || !cls.time) return;
+            
+            const [hoursStr, minutesStr] = cls.time.split(':');
+            let hours = parseInt(hoursStr, 10);
+            let minutes = parseInt(minutesStr, 10);
+            
+            minutes -= 15;
+            if (minutes < 0) {
+              minutes += 60;
+              hours -= 1;
+            }
+            if (hours < 0) hours += 24;
+
+            const courseName = courses.find(c => c.id === cls.courseId)?.name || 'Class';
+
+            notificationsToSchedule.push({
+              id: notifId++,
+              title: `Upcoming Class: ${courseName}`,
+              body: `Starts in 15 minutes${cls.room ? ` at ${cls.room}` : ''}.`,
+              schedule: {
+                on: { weekday: dayNum, hour: hours, minute: minutes },
+                repeats: true
+              }
+            });
+          });
+        }
+
+        // Schedule Assignments
+        if (settings.assignmentNotif && assignments.length > 0) {
+          assignments.filter(a => !a.completed && a.dueDate).forEach(a => {
+            const dueDate = new Date(a.dueDate);
+            dueDate.setDate(dueDate.getDate() - 1); // 1 day before
+            dueDate.setHours(9, 0, 0, 0); // 9:00 AM
+
+            if (dueDate.getTime() > Date.now()) {
+              notificationsToSchedule.push({
+                id: notifId++,
+                title: 'Assignment Due Tomorrow',
+                body: `${a.title} is due tomorrow!`,
+                schedule: { at: dueDate }
+              });
+            }
+          });
+        }
+
+        if (notificationsToSchedule.length > 0) {
+          await LocalNotifications.schedule({ notifications: notificationsToSchedule });
+        }
+      } catch (err) {
+        // Native plugin missing or web environment
+      }
+    };
+    
+    syncNotifs();
+  }, [timetable, assignments, settings.timetableNotif, settings.assignmentNotif, courses]);
+
   return (
     <AuthContext.Provider value={{
       user, login, logout,
