@@ -610,17 +610,22 @@ function App() {
         }
         
         if (hasPermission) {
-          // Welcome notification
-          await LocalNotifications.schedule({
-            notifications: [
-              {
-                title: "Welcome to Study Hub!",
-                body: "Have a great and productive study session today. 🚀",
-                id: Math.floor(Math.random() * 100000),
-                schedule: { at: new Date(Date.now() + 1000) },
-              }
-            ]
-          });
+          // Check if it's the first launch
+          const hasReceivedWelcome = localStorage.getItem('welcome_notification_sent');
+          if (!hasReceivedWelcome) {
+            // Welcome notification
+            await LocalNotifications.schedule({
+              notifications: [
+                {
+                  title: "Welcome to Study Hub!",
+                  body: "Have a great and productive study session today. 🚀",
+                  id: 9999,
+                  schedule: { at: new Date(Date.now() + 1000) },
+                }
+              ]
+            });
+            localStorage.setItem('welcome_notification_sent', 'true');
+          }
         }
         
         LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
