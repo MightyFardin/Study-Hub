@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   const [timetable, setTimetable] = useState(() => { const s = localStorage.getItem('sh2_timetable'); return s ? JSON.parse(s) : []; });
   const [grades, setGrades] = useState(() => { const s = localStorage.getItem('sh2_grades'); return s ? JSON.parse(s) : []; });
   const [flashcards, setFlashcards] = useState(() => { const s = localStorage.getItem('sh2_flashcards'); return s ? JSON.parse(s) : []; });
-  const [settings, setSettings] = useState(() => { const s = localStorage.getItem('sh2_settings'); return s ? JSON.parse(s) : { theme: 'system', accent: 'indigo' }; });
+  const [settings, setSettings] = useState(() => { const s = localStorage.getItem('sh2_settings'); return s ? JSON.parse(s) : { theme: 'light', appStyle: 'minimalist', accent: 'indigo', onboardingCompleted: false }; });
   const [masterDriveLinks, setMasterDriveLinks] = useState(() => { const s = localStorage.getItem('sh2_master_drives'); return s ? JSON.parse(s) : []; });
 
   const [isFirebaseLoaded, setIsFirebaseLoaded] = useState(false);
@@ -145,8 +145,17 @@ export const AuthProvider = ({ children }) => {
     } else {
       root.classList.add(settings.theme);
     }
-    // Set a custom property for accent colors if we want dynamic theming, or handle it via classes
   }, [settings.theme]);
+
+  // Apply App Style (Colorful vs Minimalist)
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (settings.appStyle === 'minimalist') {
+      root.classList.add('theme-minimalist');
+    } else {
+      root.classList.remove('theme-minimalist');
+    }
+  }, [settings.appStyle]);
 
   const login = (userData) => {
     setUser(userData);
@@ -175,7 +184,8 @@ export const AuthProvider = ({ children }) => {
       globalYear, setGlobalYear,
       globalSemester, setGlobalSemester,
       activeCourses,
-      syncStatus
+      syncStatus,
+      isFirebaseLoaded
     }}>
       {children}
     </AuthContext.Provider>

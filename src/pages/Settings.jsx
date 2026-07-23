@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive, User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { auth } from '../firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../firebase';
+import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function Settings() {
- const { user, settings, setSettings } = useAuth();
+ const { user, settings, setSettings, login } = useAuth();
  const [showEraseModal, setShowEraseModal] = useState(false);
  const [deletePassword, setDeletePassword] = useState('');
  const [isDeleting, setIsDeleting] = useState(false);
  const [deleteError, setDeleteError] = useState('');
  const [showPassword, setShowPassword] = useState(false);
 
+ const [showEditProfile, setShowEditProfile] = useState(false);
+ const [newName, setNewName] = useState(user?.name || '');
+ const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
  // Settings wrapper to ensure defaults
  const currentSettings = {
- theme: 'system',
+ theme: 'light',
+ appStyle: 'minimalist',
  emailNotif: true,
  pushNotif: false,
  twoFactor: false,
@@ -93,6 +99,11 @@ export default function Settings() {
  
  try {
  await signInWithEmailAndPassword(auth, user.email, deletePassword);
+ 
+ // Wipe data from Firebase
+ const docRef = doc(db, 'users', user.id || 'my_personal_data');
+ await setDoc(docRef, {});
+
  localStorage.clear();
  window.location.href = '/';
  } catch (err) {
@@ -102,7 +113,26 @@ export default function Settings() {
  }
  };
 
+ const handleUpdateProfile = async (e) => {
+ e.preventDefault();
+ if (!newName.trim()) return;
+ setIsUpdatingProfile(true);
+ try {
+ if (auth.currentUser) {
+ await updateProfile(auth.currentUser, { displayName: newName });
+ }
+ // Update local user state via setSettings or login context if available. Wait, useAuth has 'login'.
+ login({ ...user, name: newName });
+ setShowEditProfile(false);
+ } catch (err) {
+ console.error(err);
+ } finally {
+ setIsUpdatingProfile(false);
+ }
+ };
+
  return (
+ <>
  <div className="max-w-3xl mx-auto animate-in fade-in">
  <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-8">App Settings</h1>
 
@@ -117,10 +147,18 @@ export default function Settings() {
  <div className="space-y-4">
  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-slate-800 gap-4">
  <div>
+ <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Full Name</p>
+ <p className="text-sm font-medium flex items-center gap-2"><User size={16} className="text-slate-400"/> {user?.name || 'Student'}</p>
+ </div>
+ <button onClick={() => setShowEditProfile(true)} className="btn-secondary text-sm py-2 px-4 whitespace-nowrap">Edit Name</button>
+ </div>
+
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-slate-800 gap-4">
+ <div>
  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Email Address</p>
  <p className="text-sm font-medium flex items-center gap-2"><Mail size={16} className="text-slate-400"/> {user?.email || 'user@example.com'}</p>
  </div>
- <button className="btn-secondary text-sm py-2 px-4 whitespace-nowrap">Change Email</button>
+ <button className="btn-secondary text-sm py-2 px-4 whitespace-nowrap opacity-50 cursor-not-allowed">Change Email</button>
  </div>
  </div>
  </section>
@@ -133,6 +171,7 @@ export default function Settings() {
  </div>
 
  <div className="space-y-4">
+ <div className="space-y-6">
  <div>
  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Color Theme</label>
  <div className="grid grid-cols-3 gap-3">
@@ -157,6 +196,27 @@ export default function Settings() {
  <Monitor size={24} />
  <span className="text-xs font-bold uppercase tracking-wider">System</span>
  </button>
+ </div>
+ </div>
+
+ <div>
+ <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">App Style</label>
+ <div className="grid grid-cols-2 gap-3">
+ <button 
+ onClick={() => updateSetting('appStyle', 'colorful')}
+ className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all ${settings.appStyle !== 'minimalist' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-500'}`}
+ >
+ <div className="w-4 h-4 rounded-full bg-indigo-500"></div>
+ <span className="text-xs font-bold uppercase tracking-wider">Colorful</span>
+ </button>
+ <button 
+ onClick={() => updateSetting('appStyle', 'minimalist')}
+ className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all ${settings.appStyle === 'minimalist' ? 'border-slate-900 dark:border-white bg-slate-50 dark:bg-[#111] text-slate-900 dark:text-white' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-500'}`}
+ >
+ <div className="w-4 h-4 rounded-full bg-slate-900 dark:bg-white border border-slate-200 dark:border-slate-700"></div>
+ <span className="text-xs font-bold uppercase tracking-wider">Minimalist B&W</span>
+ </button>
+ </div>
  </div>
  </div>
  </div>
@@ -230,7 +290,7 @@ export default function Settings() {
  <AlertTriangle size={16} /> Erase All Data
  </button>
  </section>
-
+ </div>
  </div>
 
  {/* Erase Data Confirmation Modal */}
@@ -320,6 +380,41 @@ export default function Settings() {
  </div>
  </div>
  )}
+
+ {/* Edit Profile Modal */}
+ {showEditProfile && (
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
+ <div className="card-minimal w-full max-w-sm p-6 animate-in zoom-in-95 bg-white dark:bg-[#111]">
+ <div className="flex items-center gap-3 mb-6">
+ <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-full">
+ <User size={24} />
  </div>
+ <h2 className="text-xl font-bold text-slate-900 dark:text-white">Edit Profile</h2>
+ </div>
+ 
+ <form onSubmit={handleUpdateProfile}>
+ <div className="mb-6">
+ <label className="block text-sm font-medium mb-1">Full Name</label>
+ <input 
+ type="text"
+ value={newName}
+ onChange={e => setNewName(e.target.value)}
+ className="input-field" 
+ placeholder="Your Name"
+ required
+ />
+ </div>
+
+ <div className="flex gap-3">
+ <button type="button" onClick={() => setShowEditProfile(false)} className="btn-secondary flex-1">Cancel</button>
+ <button type="submit" disabled={isUpdatingProfile || !newName.trim()} className="btn-primary flex-1">
+ {isUpdatingProfile ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+ )}
+ </>
  );
 }

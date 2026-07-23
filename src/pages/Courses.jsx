@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Plus, Minus, X, Edit2, Trash2, BookOpen, Settings, Filter, Search, CloudLightning, Loader2, CheckCircle2, RefreshCw, BarChart, MoreVertical } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
-import AttendanceAnalytics from '../components/AttendanceAnalytics';
-import GlobalAnalytics from '../components/GlobalAnalytics';
-import GlobalAttendanceCalendar from '../components/GlobalAttendanceCalendar';
+
+const AttendanceAnalytics = lazy(() => import('../components/AttendanceAnalytics'));
+const GlobalAnalytics = lazy(() => import('../components/GlobalAnalytics'));
+const GlobalAttendanceCalendar = lazy(() => import('../components/GlobalAttendanceCalendar'));
+
+const ComponentLoader = () => (
+  <div className="flex justify-center items-center p-8 w-full">
+    <RefreshCw className="animate-spin text-indigo-500/50" />
+  </div>
+);
 
 export default function Courses() {
- const { user, courses, setCourses, attendances, setAttendances, setActiveCourseId, globalYear, globalSemester, activeCourses, notes, setNotes, masterDriveLinks, setMasterDriveLinks, attendanceHistory, setAttendanceHistory } = useAuth();
+ const { user, courses, setCourses, attendances, setAttendances, setActiveCourseId, globalYear, globalSemester, activeCourses, notes, setNotes, masterDriveLinks, setMasterDriveLinks, attendanceHistory, setAttendanceHistory, assignments } = useAuth();
  const navigate = useNavigate();
  
  // Global Min Attendance
@@ -49,7 +56,14 @@ export default function Courses() {
  const [activeTab, setActiveTab] = useState('courses');
  const [analyticsCourse, setAnalyticsCourse] = useState(null);
 
- useEffect(() => {
+  useEffect(() => {
+    if (localStorage.getItem('sh2_trigger_import') === 'true') {
+      setShowImport(true);
+      localStorage.removeItem('sh2_trigger_import');
+    }
+  }, []);
+
+  useEffect(() => {
  if (undoAction) {
  const timer = setTimeout(() => setUndoAction(null), 5000);
  return () => clearTimeout(timer);
@@ -548,7 +562,7 @@ export default function Courses() {
  };
 const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
- return (
+  return (
  <div className="max-w-4xl mx-auto relative">
   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-4 relative z-40">
     <div className="flex items-center justify-between w-full sm:w-auto">
@@ -652,20 +666,24 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
  )}
 
  {activeTab === 'analytics' ? (
+    <Suspense fallback={<ComponentLoader />}>
     <GlobalAnalytics 
-      activeCourses={activeCourses}
-      attendanceHistory={attendanceHistory}
+      activeCourses={activeCourses} 
+      attendanceHistory={attendanceHistory} 
       globalMinAttendance={globalMinAttendance}
-      onUpdateHistory={(courseId, dateStr, newStatus, existingRecordId) => handleBatchUpdateHistory([{ courseId, date: dateStr, newStatus, existingRecordId }])}
+      onUpdateHistory={setAttendanceHistory}
     />
+    </Suspense>
   ) : (
     <>
       {activeCourses.length > 0 && (
+        <Suspense fallback={<ComponentLoader />}>
         <GlobalAttendanceCalendar 
           activeCourses={activeCourses} 
           attendanceHistory={attendanceHistory} 
           onBatchUpdateHistory={handleBatchUpdateHistory} 
         />
+        </Suspense>
       )}
 
       {activeCourses.length === 0 ? (

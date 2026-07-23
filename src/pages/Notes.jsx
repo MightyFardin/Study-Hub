@@ -1,10 +1,36 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { FileText, Download, Upload, ExternalLink, X, File, Loader2, AlignLeft, BookOpen, Maximize2, Trash2, Edit2, CloudLightning, Plus } from 'lucide-react';
+import { FileText, Download, Upload, ExternalLink, X, File, Loader2, AlignLeft, BookOpen, Maximize2, Trash2, Edit2, CloudLightning, Plus, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+
+const SyncLimitTimer = () => {
+  const [timeLeft, setTimeLeft] = React.useState('');
+
+  React.useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight - now;
+      if (diff <= 0) {
+        setTimeLeft('You can sync now! Please refresh.');
+        return;
+      }
+      const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+      const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+      setTimeLeft(`Available in ${h}:${m}:${s}`);
+    };
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return <span className="font-mono text-[13px] bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-lg mt-1 tracking-wider shadow-sm border border-amber-200 dark:border-amber-800/50 flex items-center justify-center w-full">{timeLeft}</span>;
+};
 
 export default function Notes() {
  const { activeCourses, notes, setNotes, activeCourseId, setActiveCourseId } = useAuth();
@@ -27,6 +53,7 @@ export default function Notes() {
 
  const [newDriveFiles, setNewDriveFiles] = useState([]);
  const [isCheckingDrive, setIsCheckingDrive] = useState(false);
+ const [customAlert, setCustomAlert] = useState(null);
 
  // Ensure activeCourseId is valid for the current global context
  if (!activeCourseId && activeCourses.length > 0) {
@@ -147,7 +174,12 @@ export default function Notes() {
  } catch(e) {}
 
  if (syncData.count >= 2) {
- alert("Daily limit reached! You can only sync with Google Drive 2 times a day to prevent API restrictions.");
+ setCustomAlert({
+ type: 'limit',
+ title: 'Daily Limit Reached',
+ message: 'You can only sync with Google Drive 2 times a day to prevent API restrictions.',
+ subMessage: 'You can sync again tomorrow at 12:00 AM.'
+ });
  return;
  }
 
@@ -157,31 +189,54 @@ export default function Notes() {
  checkNewDriveFiles(activeCourse.driveFolderId, activeCourseId);
  };
 
- const checkNewDriveFiles = async (folderId, currentCourseId) => {
- try {
- setIsCheckingDrive(true);
- const apiKey = "AIzaSyAemNiOsk0-GRkhJPXQfTVzKdIhCvabmtM"; 
- const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,mimeType)&key=${apiKey}`);
- if (!res.ok) throw new Error("Fetch failed");
- 
- const data = await res.json();
- // Re-filter notes to ensure we get the latest state for this course
- const existingFileIds = notes.filter(n => n.courseId === currentCourseId).map(n => n.driveFileId).filter(Boolean);
- const newFiles = data.files.filter(f => !existingFileIds.includes(f.id));
- 
- if (newFiles.length > 0) {
- setNewDriveFiles(newFiles);
- } else {
- setNewDriveFiles([]);
- setTimeout(() => alert("All files are up to date! No new files found in Google Drive."), 100);
- }
- } catch (err) {
- console.error("Drive sync error:", err);
- alert("Failed to sync with Google Drive.");
- } finally {
- setIsCheckingDrive(false);
- }
- };
+  const checkNewDriveFiles = async (folderId, currentCourseId) => {
+    try {
+      setIsCheckingDrive(true);
+      const apiKey = "AIzaSyAemNiOsk0-GRkhJPXQfTVzKdIhCvabmtM"; 
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,mimeType)&key=${apiKey}`);
+      if (!res.ok) throw new Error("Fetch failed");
+      
+      const data = await res.json();
+      
+      let hasRenamedFiles = false;
+      const updatedNotes = notes.map(note => {
+        if (note.courseId === currentCourseId && note.driveFileId) {
+          const driveFile = data.files.find(f => f.id === note.driveFileId);
+          if (driveFile && (driveFile.name !== note.title || driveFile.name !== note.fileName)) {
+            hasRenamedFiles = true;
+            return { ...note, title: driveFile.name, fileName: driveFile.name };
+          }
+        }
+        return note;
+      });
+      
+      if (hasRenamedFiles) {
+        setNotes(updatedNotes);
+      }
+
+      // Re-filter notes to ensure we get the latest state for this course
+      const existingFileIds = updatedNotes.filter(n => n.courseId === currentCourseId).map(n => n.driveFileId).filter(Boolean);
+      const newFiles = data.files.filter(f => !existingFileIds.includes(f.id));
+      
+      if (newFiles.length > 0) {
+        setNewDriveFiles(newFiles);
+      } else {
+        setNewDriveFiles([]);
+        setTimeout(() => {
+          if (hasRenamedFiles) {
+            setCustomAlert({ type: 'success', title: 'Sync Complete', message: 'Files synced! Some existing files were renamed to match Google Drive.' });
+          } else {
+            setCustomAlert({ type: 'info', title: 'Up to Date', message: 'All files are up to date! No new files found in Google Drive.' });
+          }
+        }, 100);
+      }
+    } catch (err) {
+      console.error("Drive sync error:", err);
+      setCustomAlert({ type: 'error', title: 'Sync Failed', message: 'Failed to sync with Google Drive.' });
+    } finally {
+      setIsCheckingDrive(false);
+    }
+  };
 
  const handleAddNewDriveFiles = () => {
  const additionalNotes = newDriveFiles.map(file => ({
@@ -746,6 +801,52 @@ export default function Notes() {
  </div>
  <button type="submit" disabled={!!editError} className="btn-primary w-full mt-2 disabled:opacity-50 disabled:cursor-not-allowed">Save Changes</button>
  </form>
+ </div>
+ </div>
+ )}
+ {/* Custom Alert Modal */}
+ {customAlert && (
+ <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+ <div className="bg-white dark:bg-[#111] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
+ <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg ${
+ customAlert.type === 'limit' ? 'bg-amber-100 text-amber-600 shadow-amber-500/20 dark:bg-amber-900/30 dark:text-amber-400' :
+ customAlert.type === 'error' ? 'bg-red-100 text-red-600 shadow-red-500/20 dark:bg-red-900/30 dark:text-red-400' :
+ customAlert.type === 'success' ? 'bg-emerald-100 text-emerald-600 shadow-emerald-500/20 dark:bg-emerald-900/30 dark:text-emerald-400' :
+ 'bg-blue-100 text-blue-600 shadow-blue-500/20 dark:bg-blue-900/30 dark:text-blue-400'
+ }`}>
+ {customAlert.type === 'limit' && <AlertCircle size={32} />}
+ {customAlert.type === 'error' && <X size={32} />}
+ {customAlert.type === 'success' && <CheckCircle2 size={32} />}
+ {customAlert.type === 'info' && <Info size={32} />}
+ </div>
+ <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{customAlert.title}</h3>
+ <p className="text-sm font-medium text-slate-500 mb-2 leading-relaxed">
+ {customAlert.message}
+ </p>
+ {customAlert.subMessage && (
+ <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 w-full mb-4">
+ <div className="text-xs font-bold text-slate-700 dark:text-slate-300 flex flex-col items-center justify-center gap-1">
+ <div className="flex items-center gap-1.5">
+ <AlertCircle size={14} className="text-amber-500" />
+ <span>{customAlert.subMessage}</span>
+ </div>
+ {customAlert.type === 'limit' && <SyncLimitTimer />}
+ </div>
+ </div>
+ )}
+ <div className="w-full mt-4">
+ <button 
+ onClick={() => setCustomAlert(null)} 
+ className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all ${
+ customAlert.type === 'limit' ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30' :
+ customAlert.type === 'error' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' :
+ customAlert.type === 'success' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30' :
+ 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30'
+ }`}
+ >
+ Okay, got it
+ </button>
+ </div>
  </div>
  </div>
  )}

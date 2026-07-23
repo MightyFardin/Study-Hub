@@ -28,8 +28,8 @@ export default function Login() {
 
  try {
  if (isSignUp) {
- if (!fullName.trim() || !university.trim()) {
- setError('Please fill in all professional details.');
+ if (!fullName.trim()) {
+ setError('Please enter your full name.');
  setLoading(false);
  return;
  }
@@ -47,7 +47,6 @@ export default function Login() {
  setDoc(doc(db, 'users', userCredential.user.uid), {
  profile: {
  fullName,
- university,
  email,
  createdAt: new Date().toISOString()
  }
@@ -72,51 +71,59 @@ export default function Login() {
  }
  };
 
- const features = [
- { icon: <BookOpen size={24} className="text-indigo-500" />, title: 'Smart Notes', desc: 'Auto-sync Drive folders directly into your courses.' },
- { icon: <Calendar size={24} className="text-emerald-500" />, title: 'Attendance Tracker', desc: 'Never fall below 75%. Track every class easily.' },
- { icon: <Calculator size={24} className="text-amber-500" />, title: 'CGPA Calculator', desc: 'Real-time grade estimations based on your targets.' },
- { icon: <CloudLightning size={24} className="text-blue-500" />, title: 'Cloud Sync', desc: 'Access your study materials from any device instantly.' },
- ];
+  const features = [
+  { icon: <BookOpen size={24} className="text-white dark:text-slate-900" />, title: 'Smart Notes', desc: 'Auto-sync Drive folders directly into your courses.' },
+  { icon: <Calendar size={24} className="text-white dark:text-slate-900" />, title: 'Attendance Tracker', desc: 'Never fall below 75%. Track every class easily.' },
+  { icon: <Calculator size={24} className="text-white dark:text-slate-900" />, title: 'CGPA Calculator', desc: 'Real-time grade estimations based on your targets.' },
+  { icon: <CloudLightning size={24} className="text-white dark:text-slate-900" />, title: 'Cloud Sync', desc: 'Access your study materials from any device instantly.' },
+  ];
 
- return (
- <div className="min-h-screen flex flex-col items-center justify-center p-6 sm:p-8 lg:p-12 relative bg-[rgb(var(--bg-main))] overflow-y-auto">
- 
- {/* Background Ambience */}
- <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
- <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[100px] rounded-full animate-blob"></div>
- <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[100px] rounded-full animate-blob animation-delay-2000"></div>
- </div>
+  return (
+  <div className="min-h-screen flex flex-col items-center justify-center p-6 sm:p-8 lg:p-12 relative bg-slate-50 dark:bg-[#0a0a0a] overflow-y-auto overflow-x-hidden">
+  
+  {/* Hero Section */}
+  <div className="w-full max-w-5xl mx-auto text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20 pt-12 sm:pt-20">
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-bold uppercase tracking-widest mb-8 bg-white dark:bg-[#111] shadow-sm">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 dark:bg-slate-500 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-900 dark:bg-white"></span>
+      </span>
+      Workspace Ready
+    </div>
 
- {/* Hero Section */}
- <div className="w-full max-w-4xl mx-auto text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-16 pt-8">
- <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight mb-4 lg:mb-6">
- Master your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-emerald-500">Studies.</span>
- </h1>
- <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
- The ultimate student companion app. Manage your courses, track attendance, calculate CGPA, and organize your study notes effortlessly.
- </p>
+    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white leading-tight tracking-tight mb-6">
+      Your study life,<br className="hidden sm:block"/>
+      <span className="text-slate-900 dark:text-white">beautifully organized.</span>
+    </h1>
+    
+    <p className="text-lg sm:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed font-medium">
+      The minimalist workspace for students. Track attendance, manage tasks, write notes, and calculate your CGPA without the clutter.
+    </p>
 
- <button onClick={() => setShowModal(true)} className="btn-primary text-lg h-14 px-8 shadow-xl shadow-indigo-500/20 group mx-auto mb-16 rounded-xl hover:scale-105 transition-all duration-300">
- Get Started Now
- <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
- </button>
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
+      <button onClick={() => { setShowModal(true); setIsSignUp(true); }} className="w-full sm:w-auto h-12 px-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-xl shadow-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors">
+        Create Account
+      </button>
+      <button onClick={() => { setShowModal(true); setIsSignUp(false); }} className="w-full sm:w-auto h-12 px-8 bg-white dark:bg-[#111] hover:bg-slate-50 dark:hover:bg-[#1a1a1a] text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 text-sm font-bold rounded-xl shadow-sm transition-colors">
+        Log In
+      </button>
+    </div>
 
- {/* Features Grid */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 text-left">
- {features.map((f, i) => (
- <div key={i} className="flex flex-col items-start gap-4 p-5 rounded-2xl bg-white/50 dark:bg-[#111]/50 border border-slate-200/50 dark:border-slate-800/50 hover:-translate-y-2 transition-transform duration-300 shadow-sm hover:shadow-md">
- <div className="p-3 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
- {f.icon}
- </div>
- <div>
- <h3 className="font-bold text-slate-900 dark:text-white mb-1">{f.title}</h3>
- <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
- </div>
- </div>
- ))}
- </div>
- </div>
+    {/* Features Grid */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+      {features.map((f, i) => (
+        <div key={i} className="p-6 bg-white dark:bg-[#111] rounded-3xl shadow-xl hover:-translate-y-2 transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group">
+          <div className="w-14 h-14 bg-slate-900 dark:bg-white rounded-2xl mb-6 flex items-center justify-center shadow-lg rotate-3 group-hover:rotate-6 transition-transform">
+            {f.icon}
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white mb-2">{f.title}</h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">{f.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
 
  {/* Login Modal */}
  {showModal && (
@@ -149,7 +156,7 @@ export default function Login() {
  </div>
  <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Verify Your Email</h3>
  <p className="text-sm text-slate-500 mb-6 leading-relaxed">
- We've sent a professional verification link to <strong>{email}</strong>. Please check your inbox to activate your account.
+ We've sent a verification link to <strong>{email}</strong>. Please check your inbox to activate your account.
  <br /><br />
  <span className="font-bold text-amber-600 dark:text-amber-500">⚠️ IMPORTANT:</span> If you don't see it within a minute, you <strong>must check your Spam or Junk folder</strong>!
  </p>
@@ -176,17 +183,6 @@ export default function Login() {
  onChange={e => setFullName(e.target.value)} 
  className="input-field h-11" 
  placeholder="e.g. John Doe" 
- />
- </div>
- <div className="space-y-1">
- <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">University / Institution</label>
- <input 
- required 
- type="text" 
- value={university} 
- onChange={e => setUniversity(e.target.value)} 
- className="input-field h-11" 
- placeholder="e.g. Dhaka University" 
  />
  </div>
  </>
@@ -220,7 +216,7 @@ export default function Login() {
  {loading ? (
  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
  ) : (
- isSignUp ? 'Create Professional Account' : 'Log In'
+ isSignUp ? 'Create Account' : 'Log In'
  )}
  </button>
  </form>

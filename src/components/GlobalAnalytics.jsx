@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { AlertCircle, TrendingDown, TrendingUp, CheckCircle2, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { AlertCircle, TrendingDown, TrendingUp, CheckCircle2, LayoutDashboard, ChevronDown, Flame } from 'lucide-react';
 import AttendanceAnalytics from './AttendanceAnalytics';
 import CustomSelect from './CustomSelect';
 
@@ -38,6 +38,36 @@ export default function GlobalAnalytics({ activeCourses, attendanceHistory, glob
     return { totalClasses, present, absent, percent, atRisk };
   }, [activeCourses, attendanceHistory, globalMinAttendance]);
 
+  const currentStreak = useMemo(() => {
+     if (!attendanceHistory || attendanceHistory.length === 0) return 0;
+     const dates = [...new Set(attendanceHistory.map(h => new Date(h.date).toDateString()))];
+     dates.sort((a, b) => new Date(b) - new Date(a));
+     
+     let streak = 0;
+     let currentDate = new Date();
+     currentDate.setHours(0,0,0,0);
+     
+     const latestDate = new Date(dates[0]);
+     latestDate.setHours(0,0,0,0);
+     const diffDays = Math.round((currentDate - latestDate) / (1000 * 60 * 60 * 24));
+     
+     if (diffDays > 1) return 0; 
+     
+     streak = 1;
+     for (let i = 1; i < dates.length; i++) {
+        const prev = new Date(dates[i-1]);
+        const curr = new Date(dates[i]);
+        prev.setHours(0,0,0,0);
+        curr.setHours(0,0,0,0);
+        if (Math.round((prev - curr) / (1000 * 60 * 60 * 24)) === 1) {
+           streak++;
+        } else {
+           break;
+        }
+     }
+     return streak;
+  }, [attendanceHistory]);
+
   const pieData = [
     { name: 'Present', value: overallStats.present, color: '#10b981' },
     { name: 'Absent', value: overallStats.absent, color: '#f43f5e' }
@@ -71,7 +101,11 @@ export default function GlobalAnalytics({ activeCourses, attendanceHistory, glob
       {selectedCourseId === 'all' ? (
         <div className="space-y-6">
           {/* Global Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="card-minimal p-4 bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/50">
+              <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1 flex items-center gap-1"><Flame size={14} /> Streak</p>
+              <p className="text-2xl font-black text-orange-600 dark:text-orange-400">{currentStreak} <span className="text-sm font-bold text-orange-500/70">Days</span></p>
+            </div>
             <div className="card-minimal p-4 bg-indigo-50/50 dark:bg-indigo-900/10">
               <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Total Classes</p>
               <p className="text-2xl font-black text-indigo-900 dark:text-indigo-100">{overallStats.totalClasses}</p>

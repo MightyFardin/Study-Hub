@@ -113,3 +113,97 @@ select.input-field {
   transform: rotateY(180deg);
 }
 .scrollbar-none::-webkit-scrollbar { display: none; } .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Monochrome Minimalist Theme Overrides */
+.theme-minimalist .text-indigo-500,
+.theme-minimalist .text-emerald-500,
+.theme-minimalist .text-amber-500,
+.theme-minimalist .text-blue-500,
+.theme-minimalist .text-purple-500,
+.theme-minimalist .text-red-500,
+.theme-minimalist .text-indigo-600,
+.theme-minimalist .text-emerald-600,
+.theme-minimalist .text-amber-600,
+.theme-minimalist .text-blue-600,
+.theme-minimalist .text-purple-600,
+.theme-minimalist .text-red-600 {
+  @apply text-slate-900 dark:text-white !important;
+}
+
+.theme-minimalist .bg-indigo-50,
+.theme-minimalist .bg-emerald-50,
+.theme-minimalist .bg-amber-50,
+.theme-minimalist .bg-blue-50,
+.theme-minimalist .bg-purple-50,
+.theme-minimalist .bg-red-50 {
+  @apply bg-slate-100 dark:bg-[#222] !important;
+}
+
+.theme-minimalist .bg-indigo-100,
+.theme-minimalist .bg-emerald-100,
+.theme-minimalist .bg-amber-100,
+.theme-minimalist .bg-blue-100,
+.theme-minimalist .bg-purple-100,
+.theme-minimalist .bg-red-100 {
+  @apply bg-slate-200 dark:bg-[#333] !important;
+}
+
+.theme-minimalist .bg-indigo-500,
+.theme-minimalist .bg-emerald-500,
+.theme-minimalist .bg-amber-500,
+.theme-minimalist .bg-blue-500,
+.theme-minimalist .bg-purple-500,
+.theme-minimalist .bg-red-500,
+.theme-minimalist .bg-indigo-600,
+.theme-minimalist .bg-emerald-600,
+.theme-minimalist .bg-amber-600,
+.theme-minimalist .bg-blue-600,
+.theme-minimalist .bg-purple-600,
+.theme-minimalist .bg-red-600 {
+  @apply bg-slate-900 dark:bg-white text-white dark:text-slate-900 !important;
+}
+
+.theme-minimalist .border-indigo-200,
+.theme-minimalist .border-emerald-200,
+.theme-minimalist .border-amber-200,
+.theme-minimalist .border-blue-200,
+.theme-minimalist .border-purple-200,
+.theme-minimalist .border-red-200,
+.theme-minimalist .border-indigo-500,
+.theme-minimalist .border-emerald-500,
+.theme-minimalist .border-amber-500,
+.theme-minimalist .border-blue-500,
+.theme-minimalist .border-purple-500,
+.theme-minimalist .border-red-500,
+.theme-minimalist .border-indigo-500\/30,
+.theme-minimalist .border-emerald-500\/30 {
+  @apply border-slate-900 dark:border-white !important;
+}
+
+.theme-minimalist .bg-indigo-900\/20,
+.theme-minimalist .bg-emerald-900\/20,
+.theme-minimalist .bg-amber-900\/20,
+.theme-minimalist .bg-blue-900\/20,
+.theme-minimalist .bg-purple-900\/20,
+.theme-minimalist .bg-red-900\/20 {
+  @apply dark:bg-[#222] !important;
+}
+
+.theme-minimalist .bg-indigo-900\/30,
+.theme-minimalist .bg-emerald-900\/30,
+.theme-minimalist .bg-amber-900\/30,
+.theme-minimalist .bg-blue-900\/30,
+.theme-minimalist .bg-purple-900\/30,
+.theme-minimalist .bg-red-900\/30 {
+  @apply dark:bg-[#333] !important;
+}
+
+.theme-minimalist .shadow-indigo-500\/10,
+.theme-minimalist .shadow-indigo-500\/20,
+.theme-minimalist .shadow-primary-600\/20 {
+  @apply shadow-slate-500/10 dark:shadow-black/50 !important;
+}
+
+.theme-minimalist .text-indigo-400 {
+  @apply text-slate-700 dark:text-slate-300 !important;
+}
