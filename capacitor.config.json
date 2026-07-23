@@ -7,11 +7,11 @@
       "launchShowDuration": 3000,
       "launchAutoHide": false,
       "backgroundColor": "#0f172a",
-      "androidSplashResourceName": "ic_launcher",
-      "androidScaleType": "CENTER_CROP",
-      "showSpinner": false,
-      "splashFullScreen": true,
-      "splashImmersive": true
+      "showSpinner": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#4f46e5"
     }
   }
 }

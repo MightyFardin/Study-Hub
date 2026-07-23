@@ -60,11 +60,7 @@ export default function Settings() {
             title: "Study Hub",
             body: "Notifications enabled successfully!",
             id: new Date().getTime(),
-            schedule: { at: new Date(Date.now() + 1000) },
-            sound: null,
-            attachments: null,
-            actionTypeId: "",
-            extra: null
+            schedule: { at: new Date(Date.now() + 1000) }
           }]
         });
       } else {
