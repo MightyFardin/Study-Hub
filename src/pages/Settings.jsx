@@ -91,28 +91,35 @@ export default function Settings() {
  updateSetting('theme', theme);
  };
 
- const handleEraseData = async (e) => {
- e.preventDefault();
- if (!deletePassword || !user?.email) return;
- 
- setIsDeleting(true);
- setDeleteError('');
- 
- try {
- await signInWithEmailAndPassword(auth, user.email, deletePassword);
- 
- // Wipe data from Firebase
- const docRef = doc(db, 'users', user.id || 'my_personal_data');
- await setDoc(docRef, {});
+  const handleEraseData = async (e) => {
+  e.preventDefault();
+  if (!deletePassword || !user?.email) return;
+  
+  setIsDeleting(true);
+  setDeleteError('');
+  
+  try {
+  // We need to re-authenticate the user before deleting
+  await signInWithEmailAndPassword(auth, user.email, deletePassword);
+  
+  // Wipe data from Firebase
+  const docRef = doc(db, 'users', user.id || 'my_personal_data');
+  await setDoc(docRef, {});
 
- localStorage.clear();
- window.location.href = '/';
- } catch (err) {
- setDeleteError('Incorrect password. Please try again.');
- } finally {
- setIsDeleting(false);
- }
- };
+  // Delete user account from Firebase Auth
+  const { deleteUser } = await import('firebase/auth');
+  if (auth.currentUser) {
+    await deleteUser(auth.currentUser);
+  }
+
+  localStorage.clear();
+  window.location.href = '/';
+  } catch (err) {
+  setDeleteError('Incorrect password or an error occurred. Please try again.');
+  } finally {
+  setIsDeleting(false);
+  }
+  };
 
  const handleUpdateProfile = async (e) => {
  e.preventDefault();
@@ -298,7 +305,7 @@ export default function Settings() {
  onClick={() => setShowEraseModal(true)}
  className="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 px-4 py-2.5 rounded-lg text-sm font-bold transition-colors w-full sm:w-auto flex items-center justify-center gap-2"
  >
- <AlertTriangle size={16} /> Erase All Data
+ <AlertTriangle size={16} /> Delete Account & Data
  </button>
  </section>
  </div>
@@ -312,9 +319,9 @@ export default function Settings() {
  <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full">
  <AlertTriangle size={24} />
  </div>
- <h2 className="text-xl font-bold text-slate-900 dark:text-white">Erase All Data?</h2>
+ <h2 className="text-xl font-bold text-slate-900 dark:text-white">Delete Account?</h2>
  </div>
- <p className="text-sm text-slate-500 mb-6">Are you absolutely sure? This will permanently delete all courses, notes, flashcards, tasks, and settings. This cannot be undone.</p>
+ <p className="text-sm text-slate-500 mb-6">Are you absolutely sure? This will permanently delete your account and all your courses, notes, flashcards, tasks, and settings. This cannot be undone.</p>
  
  <form onSubmit={handleEraseData}>
  <div className="mb-6">

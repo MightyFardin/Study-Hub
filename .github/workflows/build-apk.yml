@@ -56,12 +56,12 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Rename APK
-        run: mv android/app/build/outputs/apk/debug/app-debug.apk Study-Hub.apk
+        run: mv android/app/build/outputs/apk/debug/app-debug.apk Study-Hub-${{ github.ref_name }}.apk
 
       - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v2
         with:
-          files: Study-Hub.apk
+          files: Study-Hub-${{ github.ref_name }}.apk
           name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false

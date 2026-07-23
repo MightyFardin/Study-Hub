@@ -562,18 +562,18 @@ function App() {
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.5';
+  const currentVersion = '1.0.6';
 
   React.useEffect(() => {
     // Hide the splash screen smoothly once the app is ready
     const hideSplash = async () => {
       try {
-        await SplashScreen.hide();
+        await SplashScreen.hide({ fadeOutDuration: 400 });
       } catch (err) {
         console.log("Not running in native capacitor environment");
       }
     };
-    hideSplash();
+    setTimeout(hideSplash, 150);
 
     // Check for app updates
     const checkForUpdates = async () => {
