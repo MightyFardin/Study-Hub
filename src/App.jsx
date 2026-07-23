@@ -562,7 +562,7 @@ function App() {
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.0';
+  const currentVersion = '1.0.1';
 
   React.useEffect(() => {
     // Hide the splash screen smoothly once the app is ready
