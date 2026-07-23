@@ -562,7 +562,7 @@ function App() {
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.11';
+  const currentVersion = '1.0.12';
 
   React.useEffect(() => {
 
@@ -620,7 +620,7 @@ function App() {
           </div>
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Update Available!</h2>
           <p className="text-slate-500 text-sm font-medium mb-6">A new version of Study Hub is available. You must update to continue using the app.</p>
-          <a href="https://github.com/MightyFardin/Study-Hub/releases/latest/download/Study-Hub.apk" target="_blank" rel="noopener noreferrer" className="btn-primary w-full py-4 text-base shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
+          <a href="https://github.com/MightyFardin/Study-Hub/releases/latest" target="_blank" rel="noopener noreferrer" className="btn-primary w-full py-4 text-base shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
             Download Update
           </a>
         </div>
