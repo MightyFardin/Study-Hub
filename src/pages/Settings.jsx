@@ -59,7 +59,7 @@ export default function Settings() {
           notifications: [{
             title: "Study Hub",
             body: "Notifications enabled successfully!",
-            id: new Date().getTime(),
+            id: Math.floor(Math.random() * 2000000000),
             schedule: { at: new Date(Date.now() + 1000) }
           }]
         });

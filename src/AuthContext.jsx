@@ -210,8 +210,7 @@ export const AuthProvider = ({ children }) => {
               title: `Upcoming Class: ${courseName}`,
               body: `Starts in 15 minutes${cls.room ? ` at ${cls.room}` : ''}.`,
               schedule: {
-                on: { weekday: dayNum, hour: hours, minute: minutes },
-                repeats: true
+                on: { weekday: dayNum, hour: hours, minute: minutes }
               }
             });
           });
