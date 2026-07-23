@@ -14,15 +14,17 @@ public class MainActivity extends BridgeActivity {
         // Force highest refresh rate for maximum FPS
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             Display.Mode[] modes = getWindowManager().getDefaultDisplay().getSupportedModes();
-            Display.Mode maxMode = modes[0];
-            for (Display.Mode mode : modes) {
-                if (mode.getRefreshRate() > maxMode.getRefreshRate()) {
-                    maxMode = mode;
+            if (modes != null && modes.length > 0) {
+                Display.Mode maxMode = modes[0];
+                for (Display.Mode mode : modes) {
+                    if (mode.getRefreshRate() > maxMode.getRefreshRate()) {
+                        maxMode = mode;
+                    }
                 }
+                WindowManager.LayoutParams lp = getWindow().getAttributes();
+                lp.preferredDisplayModeId = maxMode.getModeId();
+                getWindow().setAttributes(lp);
             }
-            WindowManager.LayoutParams lp = getWindow().getAttributes();
-            lp.preferredDisplayModeId = maxMode.getModeId();
-            getWindow().setAttributes(lp);
         }
     }
 }
