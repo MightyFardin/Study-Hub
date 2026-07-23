@@ -60,6 +60,13 @@ export default function Courses() {
     if (localStorage.getItem('sh2_trigger_import') === 'true') {
       setShowImport(true);
       localStorage.removeItem('sh2_trigger_import');
+      
+      const savedUrl = localStorage.getItem('sh2_import_url');
+      if (savedUrl) {
+        setDriveUrl(savedUrl);
+        localStorage.removeItem('sh2_import_url');
+        handleImportDrive(null, savedUrl);
+      }
     }
   }, []);
 
@@ -75,13 +82,14 @@ export default function Courses() {
  setIsEditingSettings(false);
  };
 
- const handleImportDrive = async (e) => {
- e.preventDefault();
- if (!driveUrl) return;
+ const handleImportDrive = async (e, forceUrl = null) => {
+ if (e) e.preventDefault();
+ const urlToUse = forceUrl || driveUrl;
+ if (!urlToUse) return;
 
  let folderId = '';
- const match = driveUrl.match(/folders\/([a-zA-Z0-9-_]+)/);
- const matchIdParam = driveUrl.match(/id=([a-zA-Z0-9-_]+)/);
+ const match = urlToUse.match(/folders\/([a-zA-Z0-9-_]+)/);
+ const matchIdParam = urlToUse.match(/id=([a-zA-Z0-9-_]+)/);
  
  if (match) folderId = match[1];
  else if (matchIdParam) folderId = matchIdParam[1];

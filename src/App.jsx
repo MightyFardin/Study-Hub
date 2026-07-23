@@ -51,6 +51,7 @@ function QuickSetupModal() {
   const [step, setStep] = React.useState(1);
   const [courseCode, setCourseCode] = React.useState('');
   const [courseName, setCourseName] = React.useState('');
+  const [driveLink, setDriveLink] = React.useState('');
 
   const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
   const SEMESTERS = ['1st Semester', '2nd Semester'];
@@ -133,17 +134,31 @@ function QuickSetupModal() {
                <p className="text-sm text-slate-500 font-medium">Add a course manually or import from your University's Google Drive link.</p>
             </div>
 
-            <button 
-              onClick={() => {
-                setSettings({ ...settings, onboardingCompleted: true });
-                localStorage.setItem('sh2_trigger_import', 'true');
-                window.location.href = '/courses';
-              }} 
-              className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 font-bold transition-all hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
-            >
-              <Cloud size={18} />
-              Import from Google Drive
-            </button>
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Quick Import</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Paste Google Drive folder link..." 
+                  className="input-field h-12 flex-1 text-sm" 
+                  value={driveLink} 
+                  onChange={e => setDriveLink(e.target.value)} 
+                />
+                <button 
+                  onClick={() => {
+                    if(!driveLink) return;
+                    setSettings({ ...settings, onboardingCompleted: true });
+                    localStorage.setItem('sh2_trigger_import', 'true');
+                    localStorage.setItem('sh2_import_url', driveLink);
+                    window.location.href = '/courses';
+                  }} 
+                  disabled={!driveLink}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-indigo-500/20"
+                >
+                  <Cloud size={18} /> Import
+                </button>
+              </div>
+            </div>
 
             <div className="relative flex py-2 items-center">
                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
