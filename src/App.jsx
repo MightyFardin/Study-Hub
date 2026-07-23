@@ -562,33 +562,36 @@ function App() {
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.17';
+  const currentVersion = '1.0.0';
 
   React.useEffect(() => {
 
     // Check for app updates
     const checkForUpdates = async () => {
       try {
-        const res = await fetch('https://study-hub-beta-six.vercel.app/version.json', { cache: 'no-store' });
+        const res = await fetch('https://api.github.com/repos/MightyFardin/Study-Hub/releases/latest', { cache: 'no-store' });
         const data = await res.json();
         
-        const remoteParts = data.version.split('.').map(Number);
-        const localParts = currentVersion.split('.').map(Number);
-        
-        let hasUpdate = false;
-        for (let i = 0; i < Math.max(remoteParts.length, localParts.length); i++) {
-           const r = remoteParts[i] || 0;
-           const l = localParts[i] || 0;
-           if (r > l) {
-              hasUpdate = true;
-              break;
-           } else if (r < l) {
-              break;
-           }
-        }
-        
-        if (hasUpdate) {
-           setUpdateAvailable(true);
+        if (data.tag_name) {
+          const remoteVersion = data.tag_name.replace('v', '');
+          const remoteParts = remoteVersion.split('.').map(Number);
+          const localParts = currentVersion.split('.').map(Number);
+          
+          let hasUpdate = false;
+          for (let i = 0; i < Math.max(remoteParts.length, localParts.length); i++) {
+             const r = remoteParts[i] || 0;
+             const l = localParts[i] || 0;
+             if (r > l) {
+                hasUpdate = true;
+                break;
+             } else if (r < l) {
+                break;
+             }
+          }
+          
+          if (hasUpdate) {
+             setUpdateAvailable(true);
+          }
         }
       } catch (err) {
         console.log("Failed to check for updates");

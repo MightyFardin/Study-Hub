@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive, User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive, User, Mail, Lock, Eye, EyeOff, Loader2, RefreshCw, DownloadCloud } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -16,6 +16,9 @@ export default function Settings() {
  const [showEditProfile, setShowEditProfile] = useState(false);
  const [newName, setNewName] = useState(user?.name || '');
  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+ 
+ const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+ const [updateMsg, setUpdateMsg] = useState('');
 
  // Settings wrapper to ensure defaults
  const currentSettings = {
@@ -164,10 +167,54 @@ export default function Settings() {
  login({ ...user, name: newName });
  setShowEditProfile(false);
  } catch (err) {
- console.error(err);
+ console.error("Profile update failed", err);
  } finally {
  setIsUpdatingProfile(false);
  }
+ };
+
+ const handleCheckUpdate = async () => {
+   setIsCheckingUpdate(true);
+   setUpdateMsg('');
+   try {
+     const currentVersion = '1.0.0';
+     const res = await fetch('https://api.github.com/repos/MightyFardin/Study-Hub/releases/latest', { cache: 'no-store' });
+     const data = await res.json();
+     
+     if (data.tag_name) {
+       const remoteVersion = data.tag_name.replace('v', '');
+       const remoteParts = remoteVersion.split('.').map(Number);
+       const localParts = currentVersion.split('.').map(Number);
+       
+       let hasUpdate = false;
+       for (let i = 0; i < Math.max(remoteParts.length, localParts.length); i++) {
+          const r = remoteParts[i] || 0;
+          const l = localParts[i] || 0;
+          if (r > l) {
+             hasUpdate = true;
+             break;
+          } else if (r < l) {
+             break;
+          }
+       }
+       
+       if (hasUpdate) {
+         setUpdateMsg(`Update available: ${data.tag_name}. Please restart the app or download the latest release.`);
+         setTimeout(() => {
+           window.open('https://github.com/MightyFardin/Study-Hub/releases/latest', '_blank');
+         }, 1500);
+       } else {
+         setUpdateMsg("You're on the latest version! 🎉");
+       }
+     } else {
+       setUpdateMsg("Unable to check right now.");
+     }
+   } catch (err) {
+     setUpdateMsg("Network error.");
+   } finally {
+     setIsCheckingUpdate(false);
+     setTimeout(() => setUpdateMsg(''), 4000);
+   }
  };
 
  return (
@@ -338,6 +385,34 @@ export default function Settings() {
  >
  <AlertTriangle size={16} /> Delete Account & Data
  </button>
+ </section>
+
+ {/* Updates Section */}
+ <section className="card-minimal p-6 bg-white dark:bg-[#111]">
+ <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+ <div className="flex items-center gap-2">
+ <DownloadCloud className="text-indigo-500" size={20} />
+ <h2 className="text-lg font-bold">App Updates</h2>
+ </div>
+ <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">v1.0.0</span>
+ </div>
+ <p className="text-sm text-slate-500 mb-4">Check for the latest features and bug fixes.</p>
+ 
+ <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+ <button 
+ onClick={handleCheckUpdate}
+ disabled={isCheckingUpdate}
+ className="btn-secondary px-6 py-2.5 flex items-center justify-center gap-2"
+ >
+ {isCheckingUpdate ? <RefreshCw size={16} className="animate-spin" /> : <RefreshCw size={16} />} 
+ {isCheckingUpdate ? 'Checking...' : 'Check for Updates'}
+ </button>
+ {updateMsg && (
+ <p className="text-sm font-medium animate-in fade-in slide-in-from-bottom-2 text-indigo-600 dark:text-indigo-400">
+ {updateMsg}
+ </p>
+ )}
+ </div>
  </section>
  </div>
  </div>
