@@ -234,7 +234,7 @@ export default function Attendance() {
 
  {/* Modern Add Modal */}
  {showAddModal && (
- <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 dark:bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 dark: z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
  <div className="glass-card bg-white dark:bg-slate-800 w-full max-w-md p-8 animate-in zoom-in-95 duration-300 border border-white/60 dark:border-slate-700">
  <div className="flex justify-between items-center mb-8">
  <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">Assign Course</h2>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive, User, Mail, Lock, Eye, EyeOff, Loader2, RefreshCw, DownloadCloud } from 'lucide-react';
+import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive, User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -16,19 +16,17 @@ export default function Settings() {
  const [showEditProfile, setShowEditProfile] = useState(false);
  const [newName, setNewName] = useState(user?.name || '');
  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
- 
- const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
- const [updateMsg, setUpdateMsg] = useState('');
 
  // Settings wrapper to ensure defaults
  const currentSettings = {
  theme: 'light',
  appStyle: 'minimalist',
  emailNotif: true,
- timetableNotif: true,
- assignmentNotif: true,
+ pushNotif: false,
  twoFactor: false,
  pinCode: '',
+ glassmorphism: false,
+ customDashboard: false,
  ...settings
  };
 
@@ -42,54 +40,23 @@ export default function Settings() {
  const [pinAction, setPinAction] = useState(''); // 'enable' or 'disable'
  const [pinError, setPinError] = useState('');
 
-  const requestNotificationPermission = async (settingKey) => {
-    if (currentSettings[settingKey]) {
-      updateSetting(settingKey, false);
-      return;
-    }
-    
-    try {
-      const { LocalNotifications } = await import('@capacitor/local-notifications');
-      let permStatus = await LocalNotifications.checkPermissions();
-      
-      if (permStatus.display === 'prompt' || permStatus.display === 'denied') {
-        permStatus = await LocalNotifications.requestPermissions();
-      }
-
-      if (permStatus.display === 'granted') {
-        updateSetting(settingKey, true);
-        LocalNotifications.schedule({
-          notifications: [{
-            title: "Study Hub",
-            body: "Notifications enabled successfully!",
-            id: Math.floor(Math.random() * 2000000000),
-            schedule: { at: new Date(Date.now() + 1000) }
-          }]
-        });
-      } else {
-        alert("Permission denied for push notifications.");
-        updateSetting(settingKey, false);
-      }
-    } catch (err) {
-      console.log("Capacitor Notifications not available, falling back to Web API", err);
-      // Fallback for web
-      if (!("Notification" in window)) {
-        alert("This browser does not support notifications.");
-        return;
-      }
-      if (!currentSettings[settingKey]) {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-          updateSetting(settingKey, true);
-          new Notification("Study Hub", { body: "Notifications enabled successfully!" });
-        } else {
-          alert("Permission denied for notifications.");
-        }
-      } else {
-        updateSetting(settingKey, false);
-      }
-    }
-  };
+ const handlePushNotifToggle = async () => {
+ if (!currentSettings.pushNotif) {
+ if (!("Notification" in window)) {
+ alert("This browser does not support push notifications.");
+ return;
+ }
+ const permission = await Notification.requestPermission();
+ if (permission === "granted") {
+ updateSetting('pushNotif', true);
+ new Notification("Study Hub", { body: "Push notifications enabled successfully!" });
+ } else {
+ alert("Permission denied for push notifications.");
+ }
+ } else {
+ updateSetting('pushNotif', false);
+ }
+ };
 
  const handle2FAToggle = () => {
  setPinInput('');
@@ -125,35 +92,28 @@ export default function Settings() {
  updateSetting('theme', theme);
  };
 
-  const handleEraseData = async (e) => {
-  e.preventDefault();
-  if (!deletePassword || !user?.email) return;
-  
-  setIsDeleting(true);
-  setDeleteError('');
-  
-  try {
-  // We need to re-authenticate the user before deleting
-  await signInWithEmailAndPassword(auth, user.email, deletePassword);
-  
-  // Wipe data from Firebase
-  const docRef = doc(db, 'users', user.id || 'my_personal_data');
-  await setDoc(docRef, {});
+ const handleEraseData = async (e) => {
+ e.preventDefault();
+ if (!deletePassword || !user?.email) return;
+ 
+ setIsDeleting(true);
+ setDeleteError('');
+ 
+ try {
+ await signInWithEmailAndPassword(auth, user.email, deletePassword);
+ 
+ // Wipe data from Firebase
+ const docRef = doc(db, 'users', user.id || 'my_personal_data');
+ await setDoc(docRef, {});
 
-  // Delete user account from Firebase Auth
-  const { deleteUser } = await import('firebase/auth');
-  if (auth.currentUser) {
-    await deleteUser(auth.currentUser);
-  }
-
-  localStorage.clear();
-  window.location.href = '/';
-  } catch (err) {
-  setDeleteError('Incorrect password or an error occurred. Please try again.');
-  } finally {
-  setIsDeleting(false);
-  }
-  };
+ localStorage.clear();
+ window.location.href = '/';
+ } catch (err) {
+ setDeleteError('Incorrect password. Please try again.');
+ } finally {
+ setIsDeleting(false);
+ }
+ };
 
  const handleUpdateProfile = async (e) => {
  e.preventDefault();
@@ -167,54 +127,10 @@ export default function Settings() {
  login({ ...user, name: newName });
  setShowEditProfile(false);
  } catch (err) {
- console.error("Profile update failed", err);
+ console.error(err);
  } finally {
  setIsUpdatingProfile(false);
  }
- };
-
- const handleCheckUpdate = async () => {
-   setIsCheckingUpdate(true);
-   setUpdateMsg('');
-   try {
-     const currentVersion = '1.0.0';
-     const res = await fetch('https://api.github.com/repos/MightyFardin/Study-Hub/releases/latest', { cache: 'no-store' });
-     const data = await res.json();
-     
-     if (data.tag_name) {
-       const remoteVersion = data.tag_name.replace('v', '');
-       const remoteParts = remoteVersion.split('.').map(Number);
-       const localParts = currentVersion.split('.').map(Number);
-       
-       let hasUpdate = false;
-       for (let i = 0; i < Math.max(remoteParts.length, localParts.length); i++) {
-          const r = remoteParts[i] || 0;
-          const l = localParts[i] || 0;
-          if (r > l) {
-             hasUpdate = true;
-             break;
-          } else if (r < l) {
-             break;
-          }
-       }
-       
-       if (hasUpdate) {
-         setUpdateMsg(`Update available: ${data.tag_name}. Please restart the app or download the latest release.`);
-         setTimeout(() => {
-           window.open('https://github.com/MightyFardin/Study-Hub/releases/latest', '_blank');
-         }, 1500);
-       } else {
-         setUpdateMsg("You're on the latest version! 🎉");
-       }
-     } else {
-       setUpdateMsg("Unable to check right now.");
-     }
-   } catch (err) {
-     setUpdateMsg("Network error.");
-   } finally {
-     setIsCheckingUpdate(false);
-     setTimeout(() => setUpdateMsg(''), 4000);
-   }
  };
 
  return (
@@ -304,6 +220,33 @@ export default function Settings() {
  </button>
  </div>
  </div>
+
+ <div>
+ <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Experimental UI</label>
+ <div className="space-y-3">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-slate-800 gap-4 transition-all hover:border-indigo-200 dark:hover:border-indigo-800/50">
+ <div>
+ <p className="text-sm font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500"></div> Glassmorphism</p>
+ <p className="text-xs text-slate-500 mt-1">Enable a premium frosted glass effect across the app.</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer shrink-0">
+ <input type="checkbox" className="sr-only peer" checked={currentSettings.glassmorphism} onChange={() => updateSetting('glassmorphism', !currentSettings.glassmorphism)} />
+ <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-500"></div>
+ </label>
+ </div>
+
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-slate-800 gap-4 transition-all hover:border-indigo-200 dark:hover:border-indigo-800/50">
+ <div>
+ <p className="text-sm font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400"></div> Customizable Dashboard</p>
+ <p className="text-xs text-slate-500 mt-1">Allow rearranging widgets on the dashboard.</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer shrink-0">
+ <input type="checkbox" className="sr-only peer" checked={currentSettings.customDashboard} onChange={() => updateSetting('customDashboard', !currentSettings.customDashboard)} />
+ <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
+ </label>
+ </div>
+ </div>
+ </div>
  </div>
  </div>
  </section>
@@ -327,21 +270,11 @@ export default function Settings() {
  </div>
  <div className="flex items-center justify-between">
  <div>
- <p className="font-bold text-sm">Timetable Notifications</p>
- <p className="text-xs text-slate-500 mt-1">Get notified about upcoming classes and routine changes.</p>
+ <p className="font-bold text-sm">Push Notifications</p>
+ <p className="text-xs text-slate-500 mt-1">Get notified about upcoming classes and tasks.</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer">
- <input type="checkbox" className="sr-only peer" checked={currentSettings.timetableNotif} onChange={() => requestNotificationPermission('timetableNotif')} />
- <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
- </label>
- </div>
- <div className="flex items-center justify-between">
- <div>
- <p className="font-bold text-sm">Assignment Notifications</p>
- <p className="text-xs text-slate-500 mt-1">Get reminders for upcoming assignment deadlines.</p>
- </div>
- <label className="relative inline-flex items-center cursor-pointer">
- <input type="checkbox" className="sr-only peer" checked={currentSettings.assignmentNotif} onChange={() => requestNotificationPermission('assignmentNotif')} />
+ <input type="checkbox" className="sr-only peer" checked={currentSettings.pushNotif} onChange={handlePushNotifToggle} />
  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
  </label>
  </div>
@@ -383,36 +316,8 @@ export default function Settings() {
  onClick={() => setShowEraseModal(true)}
  className="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 px-4 py-2.5 rounded-lg text-sm font-bold transition-colors w-full sm:w-auto flex items-center justify-center gap-2"
  >
- <AlertTriangle size={16} /> Delete Account & Data
+ <AlertTriangle size={16} /> Erase All Data
  </button>
- </section>
-
- {/* Updates Section */}
- <section className="card-minimal p-6 bg-white dark:bg-[#111]">
- <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
- <div className="flex items-center gap-2">
- <DownloadCloud className="text-indigo-500" size={20} />
- <h2 className="text-lg font-bold">App Updates</h2>
- </div>
- <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">v1.0.0</span>
- </div>
- <p className="text-sm text-slate-500 mb-4">Check for the latest features and bug fixes.</p>
- 
- <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
- <button 
- onClick={handleCheckUpdate}
- disabled={isCheckingUpdate}
- className="btn-secondary px-6 py-2.5 flex items-center justify-center gap-2"
- >
- {isCheckingUpdate ? <RefreshCw size={16} className="animate-spin" /> : <RefreshCw size={16} />} 
- {isCheckingUpdate ? 'Checking...' : 'Check for Updates'}
- </button>
- {updateMsg && (
- <p className="text-sm font-medium animate-in fade-in slide-in-from-bottom-2 text-indigo-600 dark:text-indigo-400">
- {updateMsg}
- </p>
- )}
- </div>
  </section>
  </div>
  </div>
@@ -425,9 +330,9 @@ export default function Settings() {
  <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full">
  <AlertTriangle size={24} />
  </div>
- <h2 className="text-xl font-bold text-slate-900 dark:text-white">Delete Account?</h2>
+ <h2 className="text-xl font-bold text-slate-900 dark:text-white">Erase All Data?</h2>
  </div>
- <p className="text-sm text-slate-500 mb-6">Are you absolutely sure? This will permanently delete your account and all your courses, notes, flashcards, tasks, and settings. This cannot be undone.</p>
+ <p className="text-sm text-slate-500 mb-6">Are you absolutely sure? This will permanently delete all courses, notes, flashcards, tasks, and settings. This cannot be undone.</p>
  
  <form onSubmit={handleEraseData}>
  <div className="mb-6">

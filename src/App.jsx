@@ -19,11 +19,10 @@ import {
   Search,
   Moon,
   Sun,
-  X,
   Bell,
   FileText,
   ChevronRight,
-  DownloadCloud
+  Plus
 } from 'lucide-react';
 import CustomSelect from './components/CustomSelect';
 
@@ -73,7 +72,7 @@ function QuickSetupModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="card-minimal w-full max-w-md bg-white dark:bg-[#111] p-8 rounded-3xl shadow-2xl animate-in zoom-in-95 border border-slate-200 dark:border-slate-800">
         {step === 1 && (
           <div className="text-center space-y-6">
@@ -335,6 +334,42 @@ function DashboardLayout({ children }) {
     return results;
   }, [searchQuery, notes, assignments, activeCourses]);
 
+  const QuickAddFAB = () => {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <div className="absolute bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
+        {open && (
+           <div className="flex flex-col items-end gap-3 animate-in slide-in-from-bottom-4 zoom-in-75 duration-200 mb-1">
+              <div className="flex items-center gap-3">
+                <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">Add Task</span>
+                <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center justify-center w-12 h-12 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/20 transition-transform hover:scale-110">
+                  <CheckSquare size={20} />
+                </Link>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">Add Note</span>
+                <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center justify-center w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/20 transition-transform hover:scale-110">
+                  <FileText size={20} />
+                </Link>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">Add Course</span>
+                <Link to="/courses" onClick={() => setOpen(false)} className="flex items-center justify-center w-12 h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg shadow-purple-500/20 transition-transform hover:scale-110">
+                  <BookOpen size={20} />
+                </Link>
+              </div>
+           </div>
+        )}
+        <button 
+          onClick={() => setOpen(!open)}
+          className={`bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 p-4 rounded-full shadow-2xl transition-all duration-300 ${open ? 'rotate-45 bg-slate-700 dark:bg-slate-300' : ''}`}
+        >
+          <Plus size={28} />
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[rgb(var(--bg-main))]">
       
@@ -343,7 +378,7 @@ function DashboardLayout({ children }) {
       
       {/* Search Modal */}
       {searchOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[100] flex items-start justify-center pt-16 sm:pt-24 p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[100] flex items-start justify-center pt-16 sm:pt-24 p-4 animate-in fade-in duration-200">
            <div className="card-minimal w-full max-w-2xl bg-white dark:bg-[#111] p-0 overflow-hidden flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center px-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#151515]">
                  <Search size={22} className="text-indigo-500 shrink-0" />
@@ -547,12 +582,12 @@ function DashboardLayout({ children }) {
             </div>
           </footer>
         </div>
+        
+        <QuickAddFAB />
       </main>
     </div>
   );
 }
-
-import { SplashScreen } from '@capacitor/splash-screen';
 
 function App() {
   const { user, settings } = useAuth();
@@ -561,101 +596,6 @@ function App() {
   });
   const [pinInput, setPinInput] = React.useState('');
   const [pinError, setPinError] = React.useState('');
-  const [updateAvailable, setUpdateAvailable] = React.useState(false);
-  const currentVersion = '1.0.0';
-
-  React.useEffect(() => {
-
-    // Check for app updates
-    const checkForUpdates = async () => {
-      try {
-        const res = await fetch('https://api.github.com/repos/MightyFardin/Study-Hub/releases/latest', { cache: 'no-store' });
-        const data = await res.json();
-        
-        if (data.tag_name) {
-          const remoteVersion = data.tag_name.replace('v', '');
-          const remoteParts = remoteVersion.split('.').map(Number);
-          const localParts = currentVersion.split('.').map(Number);
-          
-          let hasUpdate = false;
-          for (let i = 0; i < Math.max(remoteParts.length, localParts.length); i++) {
-             const r = remoteParts[i] || 0;
-             const l = localParts[i] || 0;
-             if (r > l) {
-                hasUpdate = true;
-                break;
-             } else if (r < l) {
-                break;
-             }
-          }
-          
-          if (hasUpdate) {
-             setUpdateAvailable(true);
-          }
-        }
-      } catch (err) {
-        console.log("Failed to check for updates");
-      }
-    };
-    // small delay to prevent blocking the splash screen hide
-    setTimeout(checkForUpdates, 2000);
-
-    // Request notification permission on app launch if not already granted
-    setTimeout(async () => {
-      try {
-        const { LocalNotifications } = await import('@capacitor/local-notifications');
-        const permStatus = await LocalNotifications.checkPermissions();
-        let hasPermission = permStatus.display === 'granted';
-        
-        if (permStatus.display === 'prompt') {
-          const req = await LocalNotifications.requestPermissions();
-          hasPermission = req.display === 'granted';
-        }
-        
-        if (hasPermission) {
-          // Check if it's the first launch
-          const hasReceivedWelcome = localStorage.getItem('welcome_notification_sent');
-          if (!hasReceivedWelcome) {
-            // Welcome notification
-            await LocalNotifications.schedule({
-              notifications: [
-                {
-                  title: "Welcome to Study Hub!",
-                  body: "Have a great and productive study session today. 🚀",
-                  id: 9999,
-                  schedule: { at: new Date(Date.now() + 1000) },
-                }
-              ]
-            });
-            localStorage.setItem('welcome_notification_sent', 'true');
-          }
-        }
-        
-        LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
-          console.log('Notification action performed', notificationAction);
-        });
-      } catch (err) {
-        // Not native or plugin missing
-      }
-    }, 1500);
-  }, []);
-
-  if (updateAvailable) {
-    return (
-      <div className="min-h-screen bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] fixed inset-0">
-        <div className="bg-white dark:bg-[#111] p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 border border-indigo-500/30">
-          <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner shadow-indigo-500/20 border border-indigo-100 dark:border-indigo-500/30">
-             <DownloadCloud size={40} className="text-indigo-500 animate-bounce" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Update Available!</h2>
-          <p className="text-slate-500 text-sm font-medium mb-6">A new version of Study Hub is available. You must update to continue using the app.</p>
-          <a href="https://github.com/MightyFardin/Study-Hub/releases/latest" target="_blank" rel="noopener noreferrer" className="btn-primary w-full py-4 text-base shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
-            Download Update
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   if (user && settings?.twoFactor && !isUnlocked) {
     return (

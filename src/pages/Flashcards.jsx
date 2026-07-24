@@ -48,6 +48,7 @@ export default function Flashcards() {
  };
 
  return (
+ <>
  <div className="max-w-4xl mx-auto animate-in fade-in flex flex-col md:flex-row gap-8">
  
  {/* Sidebar Manage */}
@@ -112,7 +113,7 @@ export default function Flashcards() {
  
  {/* The Card */}
  <div 
- className="w-full max-w-lg aspect-video card-minimal cursor-pointer perspective-1000 mt-4 relative"
+ className="w-full max-w-lg aspect-video cursor-pointer perspective-1000 mt-4 relative select-none outline-none [-webkit-tap-highlight-color:transparent]"
  onClick={() => setIsFlipped(!isFlipped)}
  >
  <div className={`relative w-full h-full transition-transform duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
@@ -155,39 +156,42 @@ export default function Flashcards() {
  </div>
  )}
  </div>
+ </div>
 
  {showAdd && (
  <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
- <div className="card-minimal w-full max-w-sm p-6 animate-in zoom-in-95">
- <div className="flex justify-between items-center mb-5">
- <h2 className="text-xl font-bold">Add Flashcard</h2>
- <button onClick={() => setShowAdd(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X size={20} /></button>
+ <div className="card-minimal w-full max-w-sm p-0 animate-in zoom-in-95 bg-white dark:bg-[#111] overflow-hidden rounded-2xl shadow-2xl flex flex-col border border-slate-200 dark:border-slate-800">
+ <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] shrink-0">
+ <h2 className="text-lg font-bold text-slate-900 dark:text-white">Add Flashcard</h2>
+ <button onClick={() => setShowAdd(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800"><X size={20} /></button>
  </div>
 
- <form onSubmit={handleAdd} className="space-y-4">
+ <form onSubmit={handleAdd} className="flex flex-col flex-1">
+ <div className="p-5 space-y-4">
  <div>
- <label className="block text-sm font-medium mb-1">Course</label>
+ <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Select Course</label>
  <CustomSelect value={newCard.courseId} onChange={val => setNewCard({...newCard, courseId: val})} options={courseOptions} className="py-2.5 bg-slate-50 dark:bg-slate-900/50" />
  </div>
  
  <div>
- <label className="block text-sm font-medium mb-1">Question</label>
- <textarea required value={newCard.question} onChange={e => setNewCard({...newCard, question: e.target.value})} className="input-field min-h-[80px] resize-y" placeholder="What is..." />
+ <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Question</label>
+ <textarea required value={newCard.question} onChange={e => setNewCard({...newCard, question: e.target.value})} className="input-field min-h-[80px] resize-y text-sm" placeholder="e.g. What is..." />
  </div>
 
  <div>
- <label className="block text-sm font-medium mb-1">Answer</label>
- <textarea required value={newCard.answer} onChange={e => setNewCard({...newCard, answer: e.target.value})} className="input-field min-h-[80px] resize-y" placeholder="It is..." />
+ <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Answer</label>
+ <textarea required value={newCard.answer} onChange={e => setNewCard({...newCard, answer: e.target.value})} className="input-field min-h-[80px] resize-y text-sm" placeholder="e.g. It is..." />
+ </div>
  </div>
 
- <div className="flex gap-2 pt-2">
- <button type="button" onClick={() => setShowAdd(false)} className="flex-1 py-2 rounded-lg font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300">Close</button>
- <button type="submit" className="btn-primary flex-1 py-2" disabled={!newCard.courseId}>Save Card</button>
+ <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] shrink-0 flex gap-3">
+ <button type="button" onClick={() => setShowAdd(false)} className="btn-secondary flex-1 py-2.5">Cancel</button>
+ <button type="submit" className="btn-primary flex-1 py-2.5" disabled={!newCard.courseId}>Save Card</button>
  </div>
  </form>
  </div>
  </div>
  )}
- </div>
+ </>
  );
 }

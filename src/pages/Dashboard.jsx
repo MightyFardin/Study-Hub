@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -10,20 +10,19 @@ import {
   TrendingDown,
   ArrowRight,
   FileText,
-  Clock
+  Clock,
+  ChevronUp,
+  ChevronDown,
+  Edit3,
+  Save,
+  Timer
 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user, assignments, timetable, activeCourses, attendanceHistory, notes } = useAuth();
+  const { user, assignments, timetable, activeCourses, attendanceHistory, notes, settings, setSettings } = useAuth();
   const navigate = useNavigate();
 
   const globalMinAttendance = Number(localStorage.getItem('sh2_min_attendance')) || 75;
-
-  React.useEffect(() => {
-    import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-      setTimeout(() => SplashScreen.hide({ fadeOutDuration: 400 }).catch(() => {}), 100);
-    }).catch(() => {});
-  }, []);
 
   // Urgent Tasks
   const pendingTasks = (assignments || []).filter(a => !a.completed);
@@ -65,36 +64,10 @@ export default function Dashboard() {
     return `${hours}:${m} ${ampm}`;
   };
 
-  // Current Streak
-  const currentStreak = useMemo(() => {
-    if (!attendanceHistory || attendanceHistory.length === 0) return 0;
-    const dates = [...new Set(attendanceHistory.map(h => new Date(h.date).toDateString()))];
-    dates.sort((a, b) => new Date(b) - new Date(a));
-    
-    let streak = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0,0,0,0);
-    
-    const latestDate = new Date(dates[0]);
-    latestDate.setHours(0,0,0,0);
-    const diffDays = Math.round((currentDate - latestDate) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays > 1) return 0; 
-    
-    streak = 1;
-    for (let i = 1; i < dates.length; i++) {
-       const prev = new Date(dates[i-1]);
-       const curr = new Date(dates[i]);
-       prev.setHours(0,0,0,0);
-       curr.setHours(0,0,0,0);
-       if (Math.round((prev - curr) / (1000 * 60 * 60 * 24)) === 1) {
-          streak++;
-       } else {
-          break;
-       }
-    }
-    return streak;
-  }, [attendanceHistory]);
+  // Completed Tasks Count
+  const completedTasksCount = useMemo(() => {
+    return (assignments || []).filter(a => a.completed).length;
+  }, [assignments]);
 
   // At Risk Courses
   const atRiskCourses = useMemo(() => {
@@ -114,35 +87,51 @@ export default function Dashboard() {
 
   const recentNotes = [...(notes || [])].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 3);
 
-  return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 relative pb-10">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}, {user?.name?.split(' ')[0]} 👋
-          </h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">Here is your daily study overview.</p>
-        </div>
-        <div className="card-minimal px-4 py-2 border-slate-200 dark:border-slate-800 flex items-center gap-3 hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-colors">
-          <div className="text-indigo-500">
-            <Flame size={18} />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-indigo-500/80 uppercase tracking-wider">Study Streak</p>
-            <p className="text-lg font-black text-slate-800 dark:text-slate-200 leading-none">{currentStreak} <span className="text-xs font-bold text-slate-400">Days</span></p>
-          </div>
-        </div>
-      </div>
+  const getGreetingMessage = () => {
+    const hour = new Date().getHours();
+    const timeOfDay = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
+    const name = user?.name?.split(' ')[0] || '';
+    
+    if (urgentTasks.length > 0) {
+      return {
+         title: `Good ${timeOfDay}, ${name} 👋`,
+         subtitle: `Crunch time! You have ${urgentTasks.length} urgent task${urgentTasks.length > 1 ? 's' : ''} due soon.`
+      };
+    } else if (todaysClasses.length > 0) {
+      return {
+         title: `Good ${timeOfDay}, ${name} 👋`,
+         subtitle: `You have ${todaysClasses.length} class${todaysClasses.length > 1 ? 'es' : ''} today. Have a great day!`
+      };
+    } else {
+      return {
+         title: `Good ${timeOfDay}, ${name} 👋`,
+         subtitle: `Here is your daily study overview. No urgent tasks!`
+      };
+    }
+  };
+  const greeting = getGreetingMessage();
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column (Main Focus) */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Daily Digest / Urgent Tasks */}
-          <div className="card-minimal p-0 overflow-hidden">
+  const [editMode, setEditMode] = useState(false);
+  const [order, setOrder] = useState(() => settings?.dashboardOrder || ['urgentTasks', 'classes', 'atRisk', 'notes']);
+
+  const moveUp = (index) => {
+    if (index === 0) return;
+    const newOrder = [...order];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    setOrder(newOrder);
+    setSettings({...settings, dashboardOrder: newOrder});
+  };
+
+  const moveDown = (index) => {
+    if (index === order.length - 1) return;
+    const newOrder = [...order];
+    [newOrder[index + 1], newOrder[index]] = [newOrder[index], newOrder[index + 1]];
+    setOrder(newOrder);
+    setSettings({...settings, dashboardOrder: newOrder});
+  };
+
+  const widgetActionItems = (
+    <div className="card-minimal p-0 overflow-hidden">
             <div className="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
               <div className="flex items-center gap-3">
                 <div className="text-indigo-500">
@@ -182,8 +171,9 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+  );
 
-          {/* Today's Classes */}
+  const widgetClasses = (
           <div className="card-minimal p-5">
             <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -217,13 +207,11 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          
-        </div>
+  );
 
-        {/* Right Column (Secondary Info) */}
-        <div className="space-y-6">
-          
-          {/* At Risk Courses */}
+
+
+  const widgetAtRisk = (
           <div className="card-minimal p-5">
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -247,8 +235,9 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+  );
 
-          {/* Recent Notes */}
+  const widgetNotes = (
           <div className="card-minimal p-5">
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -281,10 +270,82 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+  );
 
+  const widgetsMap = {
+    urgentTasks: widgetActionItems,
+    classes: widgetClasses,
+    atRisk: widgetAtRisk,
+    notes: widgetNotes
+  };
+
+  const defaultLayout = (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {widgetActionItems}
+          {widgetClasses}
         </div>
-        
+        <div className="space-y-6">
+          {widgetAtRisk}
+          {widgetNotes}
+        </div>
       </div>
+  );
+
+  const customLayout = (
+    <div className="space-y-4">
+      <div className="flex justify-end mb-2">
+        <button onClick={() => setEditMode(!editMode)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-colors ${editMode ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+          {editMode ? <><Save size={16} /> Finish Editing</> : <><Edit3 size={16} /> Customize Layout</>}
+        </button>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {order.map((key, i) => (
+          <div key={key} className={`relative transition-all duration-300 ${editMode ? 'ring-2 ring-indigo-500 rounded-xl p-1 bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
+            {editMode && (
+               <div className="absolute top-3 right-3 z-20 flex flex-col gap-1 bg-white dark:bg-black rounded-lg shadow-lg border border-slate-200 dark:border-slate-800 p-1">
+                 <button onClick={() => moveUp(i)} disabled={i === 0} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 disabled:opacity-30 transition-colors"><ChevronUp size={18} /></button>
+                 <div className="w-full h-px bg-slate-200 dark:bg-slate-800"></div>
+                 <button onClick={() => moveDown(i)} disabled={i === order.length - 1} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 disabled:opacity-30 transition-colors"><ChevronDown size={18} /></button>
+               </div>
+            )}
+            <div className={`h-full ${editMode ? 'opacity-90 pointer-events-none' : ''}`}>
+              {widgetsMap[key]}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 relative pb-10">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {greeting.title}
+          </h1>
+          <p className="text-sm font-medium text-slate-500 mt-1">{greeting.subtitle}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link to="/pomodoro" className="btn-primary py-2 hidden sm:flex bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 border-none">
+             <Timer size={16} /> Enter Focus Mode
+          </Link>
+          <div className="card-minimal px-4 py-2 border-slate-200 dark:border-slate-800 flex items-center gap-3 hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-colors">
+            <div className="text-emerald-500">
+              <CheckSquare size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider">Tasks Done</p>
+              <p className="text-lg font-black text-slate-800 dark:text-slate-200 leading-none">{completedTasksCount} <span className="text-xs font-bold text-slate-400">Total</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {settings?.customDashboard ? customLayout : defaultLayout}
     </div>
   );
 }

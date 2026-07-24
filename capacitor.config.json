@@ -1,18 +1,5 @@
 {
   "appId": "com.fardin.studyhub",
-  "appName": "Study Hub",
-  "webDir": "dist",
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 3000,
-      "launchAutoHide": false,
-      "backgroundColor": "#0f172a",
-      "showSpinner": false
-    },
-    "LocalNotifications": {
-      "smallIcon": "ic_stat_icon_config_sample",
-      "iconColor": "#4f46e5",
-      "presentationOptions": ["badge", "sound", "alert"]
-    }
-  }
+  "appName": "study-app-mobile",
+  "webDir": "dist"
 }
