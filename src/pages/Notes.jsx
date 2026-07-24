@@ -462,7 +462,7 @@ export default function Notes() {
 
   {/* Auto-Sync Popup Modal */}
   {newDriveFiles.length > 0 && (
-  <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+  <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[60] flex items-center justify-center p-4">
   <div className="bg-white dark:bg-[#111] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
   <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-lg shadow-blue-500/20">
   <CloudLightning size={32} />
@@ -578,7 +578,7 @@ export default function Notes() {
 
  {/* Upload Modal */}
  {showUpload && (
- <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4 ">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
  <div className="card-minimal w-full max-w-md p-0 animate-in zoom-in-95 bg-white dark:bg-[#111] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl shadow-2xl">
  
  <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] flex justify-between items-center shrink-0">
@@ -685,7 +685,7 @@ export default function Notes() {
 
  {/* Markdown Note Viewer Modal */}
  {viewingNote && (
- <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4 ">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
  <div className="bg-white dark:bg-[#111] w-full max-w-3xl h-[85vh] rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 border border-slate-200 dark:border-slate-800">
  <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
  <div>
@@ -806,7 +806,7 @@ export default function Notes() {
  )}
  {/* Custom Alert Modal */}
  {customAlert && (
- <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[70] flex items-center justify-center p-4">
  <div className="bg-white dark:bg-[#111] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 flex flex-col items-center text-center">
  <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg ${
  customAlert.type === 'limit' ? 'bg-amber-100 text-amber-600 shadow-amber-500/20 dark:bg-amber-900/30 dark:text-amber-400' :

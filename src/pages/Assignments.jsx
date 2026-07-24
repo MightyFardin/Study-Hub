@@ -3,6 +3,51 @@ import { useAuth } from '../AuthContext';
 import { Plus, Trash2, CheckCircle, Circle, Clock } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 
+const CountdownTimer = ({ dueDate }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const due = new Date(dueDate);
+      due.setHours(23, 59, 59, 999);
+      const now = new Date();
+      const diff = due - now;
+
+      if (diff <= 0) {
+        setTimeLeft('Overdue');
+        return;
+      }
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft(`${d}d ${h}h ${m}m ${s}s`);
+    };
+
+    calculateTime();
+    const timer = setInterval(calculateTime, 1000);
+    return () => clearInterval(timer);
+  }, [dueDate]);
+
+  if (timeLeft === 'Overdue') {
+    return (
+      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold shadow-sm">
+        <Clock size={12} className="animate-pulse" />
+        Overdue
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold border border-indigo-100 dark:border-indigo-800/50 shadow-sm transition-all w-32 justify-center">
+      <Clock size={12} />
+      {timeLeft}
+    </span>
+  );
+};
+
 export default function Assignments() {
   const { activeCourses, assignments, setAssignments } = useAuth();
   
@@ -113,9 +158,7 @@ export default function Assignments() {
                         <h3 className={`font-bold text-slate-900 dark:text-white transition-all duration-300 ${isAnimating ? 'line-through text-slate-400' : ''}`}>{task.title}</h3>
                         <div className="flex items-center flex-wrap gap-3 text-xs font-medium mt-1.5">
                           <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500">{getCourseName(task.courseId)}</span>
-                          <span className={`flex items-center gap-1 ${urgency}`}>
-                            <Clock size={12} /> {new Date(task.dueDate).toLocaleDateString()}
-                          </span>
+                          <CountdownTimer dueDate={task.dueDate} />
                         </div>
                       </div>
                     </div>

@@ -610,7 +610,7 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
     {/* Dropdown Menu */}
     {showDropdown && (
       <>
-        <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)}></div>
+        <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-40" onClick={() => setShowDropdown(false)}></div>
         <div className="absolute top-14 sm:top-14 right-0 sm:right-0 mt-1 w-64 bg-white dark:bg-[#151515] rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in zoom-in-95">
           <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#111]/50">
              <div className="text-xs font-bold text-slate-400 mb-2 px-1">Global Target</div>
@@ -706,7 +706,7 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
 
  {/* Add Course Modal */}
  {showAddCourse && (
- <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4 ">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
  <div className="card-minimal w-full max-w-sm p-0 animate-in zoom-in-95 bg-white dark:bg-[#111] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl shadow-2xl">
  <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] shrink-0">
  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add New Course</h2>
@@ -767,7 +767,7 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
 
  {/* Manage Courses List Modal */}
  {showDeleteCourseList && (
- <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-50 flex items-center justify-center p-4">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
  <div className="card-minimal w-full max-w-sm p-0 animate-in zoom-in-95 bg-white dark:bg-[#111] max-h-[80vh] flex flex-col overflow-hidden rounded-2xl shadow-2xl">
  <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] shrink-0">
  <div>
@@ -837,7 +837,7 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
 
  {/* Import from Drive Modal */}
  {showImport && (
- <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4 ">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
  <div className="card-minimal w-full max-w-md p-0 animate-in zoom-in-95 bg-white dark:bg-[#111] overflow-hidden rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
  
  {/* Header */}
@@ -896,7 +896,7 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
 
  {/* Import Review Modal */}
  {importReviewData && (
- <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4 ">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
  <div className="card-minimal w-full max-w-lg p-0 animate-in zoom-in-95 bg-white dark:bg-[#111] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl shadow-2xl">
  
  {/* Header */}
@@ -978,7 +978,7 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
 
  {/* Delete Recent Import Modal */}
  {showDeleteRecent && (
- <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4 ">
+ <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-50 flex items-center justify-center p-4">
  <div className="card-minimal w-full max-w-sm p-6 animate-in zoom-in-95 bg-white dark:bg-[#111]">
  <div className="flex justify-between items-center mb-5">
  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Delete Import?</h2>

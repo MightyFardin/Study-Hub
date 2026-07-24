@@ -25,6 +25,8 @@ export default function Settings() {
  pushNotif: false,
  twoFactor: false,
  pinCode: '',
+ glassmorphism: false,
+ customDashboard: false,
  ...settings
  };
 
@@ -216,6 +218,33 @@ export default function Settings() {
  <div className="w-4 h-4 rounded-full bg-slate-900 dark:bg-white border border-slate-200 dark:border-slate-700"></div>
  <span className="text-xs font-bold uppercase tracking-wider">Minimalist B&W</span>
  </button>
+ </div>
+ </div>
+
+ <div>
+ <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Experimental UI</label>
+ <div className="space-y-3">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-slate-800 gap-4 transition-all hover:border-indigo-200 dark:hover:border-indigo-800/50">
+ <div>
+ <p className="text-sm font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500"></div> Glassmorphism</p>
+ <p className="text-xs text-slate-500 mt-1">Enable a premium frosted glass effect across the app.</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer shrink-0">
+ <input type="checkbox" className="sr-only peer" checked={currentSettings.glassmorphism} onChange={() => updateSetting('glassmorphism', !currentSettings.glassmorphism)} />
+ <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-500"></div>
+ </label>
+ </div>
+
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-slate-800 gap-4 transition-all hover:border-indigo-200 dark:hover:border-indigo-800/50">
+ <div>
+ <p className="text-sm font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400"></div> Customizable Dashboard</p>
+ <p className="text-xs text-slate-500 mt-1">Allow rearranging widgets on the dashboard.</p>
+ </div>
+ <label className="relative inline-flex items-center cursor-pointer shrink-0">
+ <input type="checkbox" className="sr-only peer" checked={currentSettings.customDashboard} onChange={() => updateSetting('customDashboard', !currentSettings.customDashboard)} />
+ <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
+ </label>
+ </div>
  </div>
  </div>
  </div>

@@ -19,10 +19,10 @@ import {
   Search,
   Moon,
   Sun,
-  X,
   Bell,
   FileText,
-  ChevronRight
+  ChevronRight,
+  Plus
 } from 'lucide-react';
 import CustomSelect from './components/CustomSelect';
 
@@ -72,7 +72,7 @@ function QuickSetupModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="card-minimal w-full max-w-md bg-white dark:bg-[#111] p-8 rounded-3xl shadow-2xl animate-in zoom-in-95 border border-slate-200 dark:border-slate-800">
         {step === 1 && (
           <div className="text-center space-y-6">
@@ -334,6 +334,42 @@ function DashboardLayout({ children }) {
     return results;
   }, [searchQuery, notes, assignments, activeCourses]);
 
+  const QuickAddFAB = () => {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <div className="absolute bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
+        {open && (
+           <div className="flex flex-col items-end gap-3 animate-in slide-in-from-bottom-4 zoom-in-75 duration-200 mb-1">
+              <div className="flex items-center gap-3">
+                <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">Add Task</span>
+                <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center justify-center w-12 h-12 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/20 transition-transform hover:scale-110">
+                  <CheckSquare size={20} />
+                </Link>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">Add Note</span>
+                <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center justify-center w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/20 transition-transform hover:scale-110">
+                  <FileText size={20} />
+                </Link>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">Add Course</span>
+                <Link to="/courses" onClick={() => setOpen(false)} className="flex items-center justify-center w-12 h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg shadow-purple-500/20 transition-transform hover:scale-110">
+                  <BookOpen size={20} />
+                </Link>
+              </div>
+           </div>
+        )}
+        <button 
+          onClick={() => setOpen(!open)}
+          className={`bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 p-4 rounded-full shadow-2xl transition-all duration-300 ${open ? 'rotate-45 bg-slate-700 dark:bg-slate-300' : ''}`}
+        >
+          <Plus size={28} />
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[rgb(var(--bg-main))]">
       
@@ -342,7 +378,7 @@ function DashboardLayout({ children }) {
       
       {/* Search Modal */}
       {searchOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[100] flex items-start justify-center pt-16 sm:pt-24 p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[100] flex items-start justify-center pt-16 sm:pt-24 p-4 animate-in fade-in duration-200">
            <div className="card-minimal w-full max-w-2xl bg-white dark:bg-[#111] p-0 overflow-hidden flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center px-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#151515]">
                  <Search size={22} className="text-indigo-500 shrink-0" />
@@ -546,6 +582,8 @@ function DashboardLayout({ children }) {
             </div>
           </footer>
         </div>
+        
+        <QuickAddFAB />
       </main>
     </div>
   );

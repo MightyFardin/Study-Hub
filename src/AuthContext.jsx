@@ -147,7 +147,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [settings.theme]);
 
-  // Apply App Style (Colorful vs Minimalist)
+  // Apply App Style (Colorful vs Minimalist) and Glassmorphism
   useEffect(() => {
     const root = window.document.documentElement;
     if (settings.appStyle === 'minimalist') {
@@ -155,7 +155,13 @@ export const AuthProvider = ({ children }) => {
     } else {
       root.classList.remove('theme-minimalist');
     }
-  }, [settings.appStyle]);
+    
+    if (settings.glassmorphism) {
+      root.classList.add('theme-glass');
+    } else {
+      root.classList.remove('theme-glass');
+    }
+  }, [settings.appStyle, settings.glassmorphism]);
 
   const login = (userData) => {
     setUser(userData);

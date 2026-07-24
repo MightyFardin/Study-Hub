@@ -140,7 +140,7 @@ export default function GlobalAttendanceCalendar({ activeCourses, attendanceHist
 
     {/* Day Attendance Modal Section */}
     {selectedDate && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
+      <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           <div className="card-minimal w-full max-w-md bg-white dark:bg-[#111] p-0 overflow-hidden flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 max-h-[85vh]">
             {/* Header */}
             <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#151515] flex justify-between items-center shrink-0">
