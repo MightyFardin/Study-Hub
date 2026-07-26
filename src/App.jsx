@@ -589,6 +589,8 @@ function DashboardLayout({ children }) {
   );
 }
 
+import AppUpdater from './components/AppUpdater';
+
 function App() {
   const { user, settings } = useAuth();
   const [isUnlocked, setIsUnlocked] = React.useState(() => {
@@ -637,6 +639,7 @@ function App() {
 
   return (
     <Router>
+      <AppUpdater />
       <Routes>
         <Route path="/" element={
           !user ? <Suspense fallback={<PageLoader />}><Login /></Suspense> : <Navigate to="/dashboard" replace />
