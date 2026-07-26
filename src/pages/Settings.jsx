@@ -4,6 +4,8 @@ import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive,
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 export default function Settings() {
  const { user, settings, setSettings, login } = useAuth();
@@ -41,21 +43,48 @@ export default function Settings() {
  const [pinError, setPinError] = useState('');
 
  const handlePushNotifToggle = async () => {
- if (!currentSettings.pushNotif) {
- if (!("Notification" in window)) {
- alert("This browser does not support push notifications.");
- return;
- }
- const permission = await Notification.requestPermission();
- if (permission === "granted") {
- updateSetting('pushNotif', true);
- new Notification("Study Hub", { body: "Push notifications enabled successfully!" });
- } else {
- alert("Permission denied for push notifications.");
- }
- } else {
- updateSetting('pushNotif', false);
- }
+   if (!currentSettings.pushNotif) {
+     if (!Capacitor.isNativePlatform()) {
+       if (!("Notification" in window)) {
+         alert("This browser does not support push notifications.");
+         return;
+       }
+       const permission = await Notification.requestPermission();
+       if (permission === "granted") {
+         updateSetting('pushNotif', true);
+         new Notification("Study Hub", { body: "Push notifications enabled successfully!" });
+       } else {
+         alert("Permission denied for push notifications.");
+       }
+     } else {
+       try {
+         let permStatus = await LocalNotifications.checkPermissions();
+         if (permStatus.display !== 'granted') {
+           permStatus = await LocalNotifications.requestPermissions();
+         }
+         
+         if (permStatus.display === 'granted') {
+           updateSetting('pushNotif', true);
+           await LocalNotifications.schedule({
+             notifications: [
+               {
+                 title: "Study Hub",
+                 body: "Push notifications enabled successfully!",
+                 id: 1,
+                 schedule: { at: new Date(Date.now() + 1000) }
+               }
+             ]
+           });
+         } else {
+           alert("Permission denied for push notifications.");
+         }
+       } catch (error) {
+         alert("Could not set up native notifications: " + error.message);
+       }
+     }
+   } else {
+     updateSetting('pushNotif', false);
+   }
  };
 
  const handle2FAToggle = () => {
