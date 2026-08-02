@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../AuthContext';
-import { Trash2, Info } from 'lucide-react';
+import { Trash2, Edit2, Info, X } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
 
 export default function Calculator() {
  const { activeCourses, grades, setGrades } = useAuth();
 
  const [courseId, setCourseId] = useState('');
+ const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
+ const [editingGradeId, setEditingGradeId] = useState(null);
  const [credits, setCredits] = useState(3);
  const [grade, setGrade] = useState('4.0');
 
- const courseOptions = activeCourses.map(c => ({ value: c.id, label: c.name }));
+ const courseOptions = activeCourses
+ .filter(c => !grades.some(g => g.courseId === c.id) || c.id === courseId)
+ .map(c => ({ value: c.id, label: c.name }));
  const gradeOptions = [
  { value: '4.0', label: 'A+ (80% or above)' },
  { value: '3.75', label: 'A (75% - 79%)' },
@@ -28,7 +33,10 @@ export default function Calculator() {
  e.preventDefault();
  if (!courseId) return;
 
- // Check if course already has a grade entered
+ if (editingGradeId) {
+ setGrades(grades.map(g => g.id === editingGradeId ? { ...g, courseId, credits: Number(credits), grade: Number(grade) } : g));
+ setEditingGradeId(null);
+ } else {
  const existing = grades.find(g => g.courseId === courseId);
  if (existing) {
  setGrades(grades.map(g => g.courseId === courseId ? { ...g, credits: Number(credits), grade: Number(grade) } : g));
@@ -40,10 +48,20 @@ export default function Calculator() {
  grade: Number(grade)
  }]);
  }
+ }
  
  setCourseId('');
  setCredits(3);
  setGrade('4.0');
+ setIsEditingModalOpen(false);
+ };
+
+ const handleEdit = (g) => {
+ setEditingGradeId(g.id);
+ setCourseId(g.courseId);
+ setCredits(g.credits);
+ setGrade(g.grade.toString());
+ setIsEditingModalOpen(true);
  };
 
  const handleDelete = (id) => {
@@ -78,7 +96,7 @@ export default function Calculator() {
  <div className="flex gap-4">
  <div className="flex-1">
  <label className="block text-sm font-medium mb-1">Credits</label>
- <input required type="number" min="1" max="10" step="0.5" value={credits} onChange={e => setCredits(e.target.value)} className="input-field" />
+ <input required type="number" min="0" max="10" step="0.25" value={credits} onChange={e => setCredits(e.target.value)} className="input-field" />
  </div>
  <div className="flex-1">
  <label className="block text-sm font-medium mb-1">Grade / GPA</label>
@@ -104,6 +122,9 @@ export default function Calculator() {
  </div>
  <div className="flex items-center gap-4">
  <span className="font-black text-indigo-500">{g.grade.toFixed(2)}</span>
+ <button onClick={() => handleEdit(g)} className="text-slate-400 hover:text-indigo-500 transition-colors">
+ <Edit2 size={16} />
+ </button>
  <button onClick={() => handleDelete(g.id)} className="text-slate-400 hover:text-red-500 transition-colors">
  <Trash2 size={16} />
  </button>
@@ -141,7 +162,49 @@ export default function Calculator() {
  </div>
  </div>
  </div>
- 
+
+ {isEditingModalOpen && typeof document !== 'undefined' && createPortal(
+ <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm animate-in fade-in flex items-center justify-center p-4" onClick={() => setIsEditingModalOpen(false)}>
+ <div 
+ className="bg-white dark:bg-[#111] p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md relative animate-in zoom-in-95 duration-200"
+ onClick={e => e.stopPropagation()}
+ >
+ <button 
+ onClick={() => {
+ setIsEditingModalOpen(false);
+ setEditingGradeId(null);
+ setCourseId('');
+ setCredits(3);
+ setGrade('4.0');
+ }} 
+ className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+ >
+ <X size={20} />
+ </button>
+ <h2 className="text-lg font-bold mb-4 pr-6">Edit Course Grade</h2>
+ <form onSubmit={handleAdd} className="space-y-4">
+ <div>
+ <label className="block text-sm font-medium mb-1">Select Course</label>
+ <CustomSelect value={courseId} onChange={setCourseId} options={courseOptions} className="py-2.5 bg-slate-50 dark:bg-slate-900/50" />
+ </div>
+ <div className="flex gap-4">
+ <div className="flex-1">
+ <label className="block text-sm font-medium mb-1">Credits</label>
+ <input required type="number" min="0" max="10" step="0.25" value={credits} onChange={e => setCredits(e.target.value)} className="input-field" />
+ </div>
+ <div className="flex-1">
+ <label className="block text-sm font-medium mb-1">Grade</label>
+ <CustomSelect value={grade} onChange={setGrade} options={gradeOptions} className="py-2.5 bg-slate-50 dark:bg-slate-900/50" />
+ </div>
+ </div>
+ <button type="submit" className="btn-primary w-full mt-6" disabled={!courseId}>
+ Update Grade
+ </button>
+ </form>
+ </div>
+ </div>,
+ document.body
+ )}
  </div>
  );
 }

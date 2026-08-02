@@ -27,7 +27,6 @@
 @layer components {
   .card-minimal {
     @apply bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md;
-    will-change: transform, box-shadow, border-color;
   }
 
   .btn-primary {
@@ -61,9 +60,7 @@ select.input-field {
   animation-duration: 200ms !important;
   animation-delay: 0ms !important;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
-  will-change: transform, opacity;
   backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 @keyframes blob {

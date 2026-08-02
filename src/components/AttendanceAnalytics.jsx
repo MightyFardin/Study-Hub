@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, addMonths, subMonths, parseISO, startOfDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, AlertCircle, Calendar as CalendarIcon, TrendingUp } from 'lucide-react';
+import RadialProgress from './RadialProgress';
 
 export default function AttendanceAnalytics({ course, attendanceHistory, onUpdateHistory }) {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
@@ -82,21 +83,26 @@ export default function AttendanceAnalytics({ course, attendanceHistory, onUpdat
       
       {/* Stats Header */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800/50">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800/50 card-hover">
           <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Total Classes</p>
           <p className="text-2xl font-black text-indigo-900 dark:text-indigo-100">{courseHistory.length}</p>
         </div>
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/50 card-hover">
           <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Attended</p>
           <p className="text-2xl font-black text-emerald-900 dark:text-emerald-100">{courseHistory.filter(h=>h.status==='present').length}</p>
         </div>
-        <div className="bg-rose-50 dark:bg-rose-900/20 p-4 rounded-xl border border-rose-100 dark:border-rose-800/50">
+        <div className="bg-rose-50 dark:bg-rose-900/20 p-4 rounded-xl border border-rose-100 dark:border-rose-800/50 card-hover">
           <p className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">Missed</p>
           <p className="text-2xl font-black text-rose-900 dark:text-rose-100">{courseHistory.filter(h=>h.status==='absent').length}</p>
         </div>
-        <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-100 dark:border-amber-800/50">
-          <p className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1">Current Avg</p>
-          <p className="text-2xl font-black text-amber-900 dark:text-amber-100">{currentPercent}%</p>
+        <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-100 dark:border-amber-800/50 card-hover flex flex-col items-center justify-center">
+          <p className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">Current Avg</p>
+          <RadialProgress 
+            percent={currentPercent} 
+            size={72} 
+            strokeWidth={7} 
+            colorClass="text-amber-500 dark:text-amber-400" 
+          />
         </div>
       </div>
 

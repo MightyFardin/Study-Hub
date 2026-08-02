@@ -3,6 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { AlertCircle, TrendingDown, TrendingUp, CheckCircle2, LayoutDashboard, ChevronDown, Flame } from 'lucide-react';
 import AttendanceAnalytics from './AttendanceAnalytics';
 import CustomSelect from './CustomSelect';
+import RadialProgress from './RadialProgress';
 
 export default function GlobalAnalytics({ activeCourses, attendanceHistory, globalMinAttendance, onUpdateHistory }) {
   const [selectedCourseId, setSelectedCourseId] = useState('all');
@@ -102,25 +103,30 @@ export default function GlobalAnalytics({ activeCourses, attendanceHistory, glob
         <div className="space-y-6">
           {/* Global Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="card-minimal p-4 bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/50">
+            <div className="card-minimal p-4 card-hover bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/50">
               <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1 flex items-center gap-1"><Flame size={14} /> Streak</p>
               <p className="text-2xl font-black text-orange-600 dark:text-orange-400">{currentStreak} <span className="text-sm font-bold text-orange-500/70">Days</span></p>
             </div>
-            <div className="card-minimal p-4 bg-indigo-50/50 dark:bg-indigo-900/10">
+            <div className="card-minimal p-4 card-hover bg-indigo-50/50 dark:bg-indigo-900/10">
               <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Total Classes</p>
               <p className="text-2xl font-black text-indigo-900 dark:text-indigo-100">{overallStats.totalClasses}</p>
             </div>
-            <div className="card-minimal p-4 bg-emerald-50/50 dark:bg-emerald-900/10">
+            <div className="card-minimal p-4 card-hover bg-emerald-50/50 dark:bg-emerald-900/10">
               <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Total Present</p>
               <p className="text-2xl font-black text-emerald-900 dark:text-emerald-100">{overallStats.present}</p>
             </div>
-            <div className="card-minimal p-4 bg-rose-50/50 dark:bg-rose-900/10">
+            <div className="card-minimal p-4 card-hover bg-rose-50/50 dark:bg-rose-900/10">
               <p className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">Total Absent</p>
               <p className="text-2xl font-black text-rose-900 dark:text-rose-100">{overallStats.absent}</p>
             </div>
-            <div className={`card-minimal p-4 ${overallStats.percent >= globalMinAttendance ? 'bg-amber-50/50 dark:bg-amber-900/10' : 'bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-900/50'}`}>
-              <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${overallStats.percent >= globalMinAttendance ? 'text-amber-500' : 'text-red-500'}`}>Overall Avg</p>
-              <p className={`text-2xl font-black ${overallStats.percent >= globalMinAttendance ? 'text-amber-900 dark:text-amber-100' : 'text-red-600 dark:text-red-400'}`}>{overallStats.percent}%</p>
+            <div className={`card-minimal p-4 card-hover flex flex-col items-center justify-center ${overallStats.percent >= globalMinAttendance ? 'bg-amber-50/50 dark:bg-amber-900/10' : 'bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-900/50'}`}>
+              <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${overallStats.percent >= globalMinAttendance ? 'text-amber-500' : 'text-red-500'}`}>Overall Avg</p>
+              <RadialProgress 
+                percent={overallStats.percent} 
+                size={72} 
+                strokeWidth={7} 
+                colorClass={overallStats.percent >= globalMinAttendance ? "text-amber-500 dark:text-amber-400" : "text-red-500 dark:text-red-400"} 
+              />
             </div>
           </div>
 
@@ -179,10 +185,14 @@ export default function GlobalAnalytics({ activeCourses, attendanceHistory, glob
                           <h4 className="font-bold text-slate-800 dark:text-slate-200">{course.name}</h4>
                           <p className="text-xs text-slate-500">Target: {globalMinAttendance}%</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-right">
-                            <p className="text-xs font-bold text-rose-500">Current</p>
-                            <p className="text-lg font-black text-rose-600 dark:text-rose-400">{course.percent}%</p>
+                        <div className="flex items-center gap-4">
+                          <div className="flex flex-col items-center">
+                            <RadialProgress 
+                              percent={course.percent} 
+                              size={48} 
+                              strokeWidth={5} 
+                              colorClass="text-rose-500 dark:text-rose-400" 
+                            />
                           </div>
                           <button 
                             onClick={() => setSelectedCourseId(course.id)}

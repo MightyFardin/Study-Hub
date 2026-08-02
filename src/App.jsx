@@ -1,4 +1,5 @@
 import React, { Suspense, lazy } from 'react';
+import { createPortal } from 'react-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { 
@@ -72,7 +73,7 @@ function QuickSetupModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
+    typeof document !== 'undefined' ? createPortal(<div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="card-minimal w-full max-w-md bg-white dark:bg-[#111] p-8 rounded-3xl shadow-2xl animate-in zoom-in-95 border border-slate-200 dark:border-slate-800">
         {step === 1 && (
           <div className="text-center space-y-6">
@@ -188,7 +189,7 @@ function QuickSetupModal() {
           </div>
         )}
       </div>
-    </div>
+    </div>, document.body) : null
   );
 }
 
@@ -377,7 +378,7 @@ function DashboardLayout({ children }) {
       {isFirebaseLoaded && (!settings || settings.onboardingCompleted !== true) && <QuickSetupModal />}
       
       {/* Search Modal */}
-      {searchOpen && (
+      {searchOpen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[100] flex items-start justify-center pt-16 sm:pt-24 p-4 animate-in fade-in duration-200">
            <div className="card-minimal w-full max-w-2xl bg-white dark:bg-[#111] p-0 overflow-hidden flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center px-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#151515]">
@@ -427,14 +428,15 @@ function DashboardLayout({ children }) {
                      ))}
                    </div>
                 )}
-              </div>
+               </div>
            </div>
-        </div>
-      )}
+        </div>, document.body)
+      }
 
       {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      {sidebarOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />,
+        document.body
       )}
 
       {/* Sidebar */}

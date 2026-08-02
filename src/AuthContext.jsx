@@ -135,6 +135,32 @@ export const AuthProvider = ({ children }) => {
 
   const activeCourses = courses.filter(c => c.year === globalYear && c.semester === globalSemester);
 
+  // Push Notifications for Deadlines
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'granted' && assignments.length > 0) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const lastNotified = localStorage.getItem('sh2_last_notified_date');
+      
+      if (lastNotified !== todayStr) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
+        const dueTomorrow = assignments.filter(a => !a.completed && a.dueDate && a.dueDate.startsWith(tomorrowStr));
+        
+        if (dueTomorrow.length > 0) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification('Deadline Tomorrow!', {
+              body: `You have ${dueTomorrow.length} assignment(s) due tomorrow!`,
+              icon: '/favicon.svg'
+            });
+            localStorage.setItem('sh2_last_notified_date', todayStr);
+          }).catch(e => console.log('SW Notification failed', e));
+        }
+      }
+    }
+  }, [assignments]);
+
   // Apply theme and accent on load
   useEffect(() => {
     const root = window.document.documentElement;

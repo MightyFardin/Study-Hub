@@ -5,6 +5,7 @@ import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Plus, Minus, X, Edit2, Trash2, BookOpen, Settings, Filter, Search, CloudLightning, Loader2, CheckCircle2, RefreshCw, BarChart, MoreVertical } from 'lucide-react';
 import CustomSelect from '../components/CustomSelect';
+import SwipeableItem from '../components/SwipeableItem';
 
 const AttendanceAnalytics = lazy(() => import('../components/AttendanceAnalytics'));
 const GlobalAnalytics = lazy(() => import('../components/GlobalAnalytics'));
@@ -695,10 +696,12 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
       )}
 
       {activeCourses.length === 0 ? (
- <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50">
- <BookOpen size={48} className="text-slate-300 mb-4" />
- <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-1">No Courses Yet</h3>
- <p className="text-sm text-slate-500">No courses added in {globalYear}, {globalSemester} yet.</p>
+ <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 mt-4">
+   <div className="w-16 h-16 bg-white dark:bg-[#111] rounded-full flex items-center justify-center mb-4 shadow-sm animate-bounce border border-slate-100 dark:border-slate-800">
+     <BookOpen size={28} className="text-indigo-400" />
+   </div>
+   <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-1">No Courses Yet</h3>
+   <p className="text-sm text-slate-500">No courses added in {globalYear}, {globalSemester} yet.</p>
  </div>
  ) : null}
  </>
@@ -782,35 +785,28 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
  <p className="text-center text-sm text-slate-500 py-8">No courses available.</p>
  ) : (
  activeCourses.map(course => (
- <div key={course.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#111] hover:border-slate-200 dark:hover:border-slate-700 transition-colors">
- <div className="flex-1 min-w-0 pr-3">
- <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{course.name}</h3>
- <p className="text-xs text-slate-500 truncate">{course.teacherName}</p>
- </div>
- <div className="flex items-center gap-1 shrink-0">
- <button 
- onClick={() => {
- setShowDeleteCourseList(false);
- setEditCourseData(course);
- setEditingCourseId(course.id);
- }} 
- className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"
- title="Edit Course"
+ <SwipeableItem 
+   key={course.id}
+   onEdit={() => {
+     setShowDeleteCourseList(false);
+     setEditCourseData(course);
+     setEditingCourseId(course.id);
+   }}
+   onDelete={() => {
+     setShowDeleteCourseList(false);
+     handleDeleteCourse(course.id);
+   }}
  >
- <Edit2 size={18} />
- </button>
- <button 
- onClick={() => {
- setShowDeleteCourseList(false);
- handleDeleteCourse(course.id);
- }} 
- className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
- title="Delete Course"
- >
- <Trash2 size={18} />
- </button>
- </div>
- </div>
+  <div className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#111] hover:bg-slate-50 dark:hover:bg-[#151515]">
+  <div className="flex-1 min-w-0 pr-3">
+  <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{course.name}</h3>
+  <p className="text-xs text-slate-500 truncate">{course.teacherName}</p>
+  </div>
+  <div className="flex items-center gap-1 shrink-0 text-slate-400">
+  <span className="text-[10px] font-bold uppercase tracking-wider">Swipe</span>
+  </div>
+  </div>
+ </SwipeableItem>
  ))
  )}
  </div>
@@ -1013,6 +1009,14 @@ const filteredCourses = activeCourses.filter(c => c.name.toLowerCase().includes(
  </div>
  </div>
  )}
+
+ {/* Floating Action Button */}
+ <button 
+   onClick={() => setShowAddCourse(true)}
+   className="fixed bottom-20 right-6 md:bottom-8 md:right-8 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center transition-all z-40"
+ >
+   <Plus size={24} />
+ </button>
  </div>
  );
 }

@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import SwipeableItem from '../components/SwipeableItem';
 
 const SyncLimitTimer = () => {
   const [timeLeft, setTimeLeft] = React.useState('');
@@ -520,13 +521,24 @@ export default function Notes() {
         {/* Clean, Scannable List */}
         <div className="flex-1 overflow-y-auto space-y-2.5 pr-2 scrollbar-thin">
           {activeNotes.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm font-medium">No notes uploaded for this course yet.</div>
+            <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 mt-4">
+              <div className="w-16 h-16 bg-white dark:bg-[#111] rounded-full flex items-center justify-center mb-4 shadow-sm animate-bounce border border-slate-100 dark:border-slate-800">
+                <FileText size={28} className="text-indigo-400" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-1">No Notes Here</h3>
+              <p className="text-sm text-slate-500">You haven't uploaded any notes for this course yet.</p>
+            </div>
           ) : (
             activeNotes.map(note => {
               const isDownloading = downloadingId === note.id;
               
               return (
-                <div key={note.id} className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border border-slate-100 dark:border-slate-800 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800/50 hover:bg-slate-50 dark:hover:bg-[#151515] transition-all gap-4 shadow-sm hover:shadow-md cursor-default">
+                <SwipeableItem 
+                  key={note.id}
+                  onEdit={() => setEditingNote({...note, sourceType: note.isBase64 ? 'file' : (note.fileType === 'text' ? 'text' : 'link')})}
+                  onDelete={() => setNoteToDelete(note.id)}
+                >
+                <div className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border border-slate-100 dark:border-slate-800 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800/50 hover:bg-slate-50 dark:hover:bg-[#151515] card-hover gap-4 shadow-sm hover:shadow-md cursor-default bg-white dark:bg-[#111]">
                   
                   <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto overflow-hidden">
                     <div className="w-10 h-10 rounded-lg bg-white dark:bg-[#111] shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-center shrink-0">
@@ -551,12 +563,6 @@ export default function Notes() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
-                      <button onClick={() => setEditingNote({...note, sourceType: note.isBase64 ? 'file' : (note.fileType === 'text' ? 'text' : 'link')})} className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors" title="Edit Note">
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => setNoteToDelete(note.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Delete Note">
-                        <Trash2 size={16} />
-                      </button>
                       <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
                       <button onClick={() => handleDownload(note)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Download">
                         <Download size={18} />
@@ -568,6 +574,7 @@ export default function Notes() {
                     </div>
                   )}
                 </div>
+                </SwipeableItem>
               );
             })
           )}

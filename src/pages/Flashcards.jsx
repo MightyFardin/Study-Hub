@@ -11,9 +11,12 @@ export default function Flashcards() {
  
  const [filterCourse, setFilterCourse] = useState('all');
  const [isFlipped, setIsFlipped] = useState(false);
- const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const startX = React.useRef(0);
+  const isDragging = React.useRef(false);
 
- const courseOptions = activeCourses.map(c => ({ value: c.id, label: c.name }));
+  const courseOptions = activeCourses.map(c => ({ value: c.id, label: c.name }));
  const filterOptions = [{ value: 'all', label: 'All Courses' }, ...courseOptions];
 
  const handleAdd = (e) => {
@@ -22,7 +25,11 @@ export default function Flashcards() {
  
  setFlashcards([...flashcards, {
  id: Date.now().toString(),
- ...newCard
+ ...newCard,
+ interval: 0,
+ repetition: 0,
+ efactor: 2.5,
+ nextReviewDate: new Date().toISOString()
  }]);
  
  setNewCard({ courseId: newCard.courseId, question: '', answer: '' }); // keep course selected
@@ -35,19 +42,76 @@ export default function Flashcards() {
  }
  };
 
- const activeCards = flashcards.filter(f => (filterCourse === 'all' || f.courseId === filterCourse) && activeCourses.some(c => c.id === f.courseId));
+  const activeCards = flashcards.filter(f => {
+    const isRightCourse = filterCourse === 'all' || f.courseId === filterCourse;
+    const isValid = activeCourses.some(c => c.id === f.courseId);
+    const isDue = !f.nextReviewDate || new Date(f.nextReviewDate).getTime() <= Date.now();
+    return isRightCourse && isValid && isDue;
+  });
 
- const nextCard = () => {
- setIsFlipped(false);
- setCurrentIndex((prev) => (prev + 1) % activeCards.length);
- };
+  const nextCard = () => {
+    setIsFlipped(false);
+    setCurrentIndex((prev) => (prev + 1) % activeCards.length);
+  };
 
- const prevCard = () => {
- setIsFlipped(false);
- setCurrentIndex((prev) => (prev - 1 + activeCards.length) % activeCards.length);
- };
+  const prevCard = () => {
+    setIsFlipped(false);
+    setCurrentIndex((prev) => (prev - 1 + activeCards.length) % activeCards.length);
+  };
 
- return (
+  const handleReview = (quality) => {
+    if (activeCards.length === 0) return;
+    const card = activeCards[currentIndex];
+    let { interval = 0, repetition = 0, efactor = 2.5 } = card;
+
+    if (quality >= 3) {
+      if (repetition === 0) interval = 1;
+      else if (repetition === 1) interval = 6;
+      else interval = Math.round(interval * efactor);
+      repetition += 1;
+    } else {
+      repetition = 0;
+      interval = 1;
+    }
+
+    efactor = efactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+    if (efactor < 1.3) efactor = 1.3;
+
+    const nextReviewDate = new Date();
+    nextReviewDate.setDate(nextReviewDate.getDate() + interval);
+
+    const updatedCard = { ...card, interval, repetition, efactor, nextReviewDate: nextReviewDate.toISOString() };
+    setFlashcards(flashcards.map(f => f.id === card.id ? updatedCard : f));
+    
+    setIsFlipped(false);
+    setSwipeOffset(0);
+    // Don't change index; the card disappears from activeCards
+    if (currentIndex >= activeCards.length - 1) {
+      setCurrentIndex(Math.max(0, activeCards.length - 2));
+    }
+  };
+
+  const handleTouchStart = (clientX) => {
+    startX.current = clientX;
+    isDragging.current = true;
+  };
+  const handleTouchMove = (clientX) => {
+    if (!isDragging.current) return;
+    setSwipeOffset(clientX - startX.current);
+  };
+  const handleTouchEnd = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (swipeOffset < -80) {
+      handleReview(0); // Swipe Left = Forgot
+    } else if (swipeOffset > 80) {
+      handleReview(4); // Swipe Right = Remembered
+    } else {
+      setSwipeOffset(0); // Bounce back
+    }
+  };
+
+  return (
  <>
  <div className="max-w-4xl mx-auto animate-in fade-in flex flex-col md:flex-row gap-8">
  
@@ -115,6 +179,19 @@ export default function Flashcards() {
  <div 
  className="w-full max-w-lg aspect-video cursor-pointer perspective-1000 mt-4 relative select-none outline-none [-webkit-tap-highlight-color:transparent]"
  onClick={() => setIsFlipped(!isFlipped)}
+ onTouchStart={(e) => handleTouchStart(e.touches[0].clientX)}
+ onTouchMove={(e) => handleTouchMove(e.touches[0].clientX)}
+ onTouchEnd={handleTouchEnd}
+ onMouseDown={(e) => handleTouchStart(e.clientX)}
+ onMouseMove={(e) => handleTouchMove(e.clientX)}
+ onMouseUp={handleTouchEnd}
+ onMouseLeave={() => { if (isDragging.current) handleTouchEnd(); }}
+ style={{
+   transform: `translateX(${swipeOffset}px) rotate(${swipeOffset * 0.05}deg)`,
+   opacity: 1 - Math.abs(swipeOffset) / 400,
+   touchAction: 'pan-y',
+   transition: isDragging.current ? 'none' : 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)'
+ }}
  >
  <div className={`relative w-full h-full transition-transform duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
  

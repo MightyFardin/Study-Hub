@@ -16,13 +16,29 @@ export default function Pomodoro() {
  const [settings, setSettings] = useState({ work: 25, break: 5 });
  const [showSettings, setShowSettings] = useState(false);
 
- useEffect(() => {
- let interval = null;
- if (isRunning && timeLeft > 0) {
- interval = setInterval(() => {
- setTimeLeft(prev => prev - 1);
- }, 1000);
- } else if (timeLeft === 0) {
+  useEffect(() => {
+    let worker = null;
+    
+    if (isRunning && timeLeft > 0) {
+      const workerCode = `
+        let timerId = null;
+        self.onmessage = function(e) {
+          if (e.data === 'start') {
+            timerId = setInterval(() => self.postMessage('tick'), 1000);
+          } else if (e.data === 'stop') {
+            clearInterval(timerId);
+          }
+        };
+      `;
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      worker = new Worker(URL.createObjectURL(blob));
+      
+      worker.onmessage = () => {
+        setTimeLeft(prev => prev - 1);
+      };
+      
+      worker.postMessage('start');
+    } else if (timeLeft === 0 && isRunning) {
  // Switch modes
  if (mode === 'work') {
  setMode('break');
@@ -32,14 +48,33 @@ export default function Pomodoro() {
  setTimeLeft(settings.work * 60);
  }
  setIsRunning(false); // require manual start for next session
- // Optional: Play a sound here
- const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
- audio.play().catch(e => console.log("Audio play failed"));
- }
- return () => clearInterval(interval);
+      // Optional: Play a sound here
+      const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+      audio.play().catch(e => console.log("Audio play failed"));
+      
+      // Trigger a system notification if permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(mode === 'work' ? 'Break Time!' : 'Focus Time!', {
+          body: mode === 'work' ? 'Great job! Time for a break.' : 'Break is over, back to work!',
+          icon: '/favicon.svg'
+        });
+      }
+    }
+    
+    return () => {
+      if (worker) {
+        worker.postMessage('stop');
+        worker.terminate();
+      }
+    };
  }, [isRunning, timeLeft, mode, settings]);
 
- const toggleTimer = () => setIsRunning(!isRunning);
+  const toggleTimer = () => {
+    if (!isRunning && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+    setIsRunning(!isRunning);
+  };
 
  const resetTimer = () => {
  setIsRunning(false);

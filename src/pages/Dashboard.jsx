@@ -15,11 +15,13 @@ import {
   ChevronDown,
   Edit3,
   Save,
-  Timer
+  Timer,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user, assignments, timetable, activeCourses, attendanceHistory, notes, settings, setSettings } = useAuth();
+  const { user, assignments, timetable, activeCourses, attendanceHistory, setAttendanceHistory, notes, settings, setSettings } = useAuth();
   const navigate = useNavigate();
 
   const globalMinAttendance = Number(localStorage.getItem('sh2_min_attendance')) || 75;
@@ -130,8 +132,29 @@ export default function Dashboard() {
     setSettings({...settings, dashboardOrder: newOrder});
   };
 
+  const handleQuickAttendance = (courseId, status) => {
+    if (!courseId) return;
+    const today = new Date().toISOString().split('T')[0];
+    const existingRecord = (attendanceHistory || []).find(h => h.courseId === courseId && h.date.startsWith(today));
+    
+    let newHistory = [...(attendanceHistory || [])];
+    if (existingRecord) {
+      if (existingRecord.status === status) return; // No change
+      newHistory = newHistory.filter(h => h.id !== existingRecord.id);
+    }
+    
+    newHistory.push({
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      courseId,
+      date: new Date().toISOString(),
+      status
+    });
+    
+    setAttendanceHistory(newHistory);
+  };
+
   const widgetActionItems = (
-    <div className="card-minimal p-0 overflow-hidden">
+    <div className="card-minimal p-0 overflow-hidden card-hover">
             <div className="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
               <div className="flex items-center gap-3">
                 <div className="text-indigo-500">
@@ -174,7 +197,7 @@ export default function Dashboard() {
   );
 
   const widgetClasses = (
-          <div className="card-minimal p-5">
+          <div className="card-minimal p-5 card-hover">
             <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <Calendar className="text-indigo-500" size={18} /> Today's Schedule
@@ -194,8 +217,36 @@ export default function Dashboard() {
                         <h4 className="font-bold text-sm text-slate-700 dark:text-slate-200 truncate pr-2">{cls.subject}</h4>
                         <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded shrink-0">Class</span>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium">{formatTime(cls.time)}</p>
-                      {cls.room && <p className="text-xs text-slate-400 mt-1">{cls.room}</p>}
+                      <p className="text-xs text-slate-500 font-medium mb-3">{formatTime(cls.time)} {cls.room && `• ${cls.room}`}</p>
+                      
+                      {/* Quick Attendance */}
+                      {cls.courseId && (
+                        <div className="flex items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-800/50">
+                          {(() => {
+                            const today = new Date().toISOString().split('T')[0];
+                            const record = (attendanceHistory || []).find(h => h.courseId === cls.courseId && h.date.startsWith(today));
+                            const isPresent = record?.status === 'present';
+                            const isAbsent = record?.status === 'absent';
+                            
+                            return (
+                              <>
+                                <button 
+                                  onClick={(e) => { e.preventDefault(); handleQuickAttendance(cls.courseId, 'present'); }}
+                                  className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${isPresent ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#222] text-slate-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600'}`}
+                                >
+                                  <CheckCircle2 size={14} /> {isPresent ? 'Present' : 'Mark'}
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.preventDefault(); handleQuickAttendance(cls.courseId, 'absent'); }}
+                                  className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${isAbsent ? 'bg-rose-500 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#222] text-slate-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600'}`}
+                                >
+                                  <XCircle size={14} /> {isAbsent ? 'Absent' : 'Miss'}
+                                </button>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -212,7 +263,7 @@ export default function Dashboard() {
 
 
   const widgetAtRisk = (
-          <div className="card-minimal p-5">
+          <div className="card-minimal p-5 card-hover">
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <TrendingDown className="text-slate-400 dark:text-slate-500" size={18} /> At Risk
@@ -238,7 +289,7 @@ export default function Dashboard() {
   );
 
   const widgetNotes = (
-          <div className="card-minimal p-5">
+          <div className="card-minimal p-5 card-hover">
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               <h2 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <BookOpen className="text-indigo-500" size={18} /> Recent Notes
@@ -333,7 +384,7 @@ export default function Dashboard() {
           <Link to="/pomodoro" className="btn-primary py-2 hidden sm:flex bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 border-none">
              <Timer size={16} /> Enter Focus Mode
           </Link>
-          <div className="card-minimal px-4 py-2 border-slate-200 dark:border-slate-800 flex items-center gap-3 hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-colors">
+          <div className="card-minimal px-4 py-2 border-slate-200 dark:border-slate-800 flex items-center gap-3 card-hover">
             <div className="text-emerald-500">
               <CheckSquare size={18} />
             </div>

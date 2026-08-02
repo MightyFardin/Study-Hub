@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, addMonths, subMonths, parseISO, isFuture } from 'date-fns';
 import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, X, Calendar as CalendarIcon, Info, Minus } from 'lucide-react';
 
@@ -95,7 +96,8 @@ export default function GlobalAttendanceCalendar({ activeCourses, attendanceHist
             const future = isFuture(day) && !isToday(day);
             
             // Check overall status for the day (did we mark any classes?)
-            const recordsForDay = (attendanceHistory || []).filter(h => isSameDay(parseISO(h.date), day));
+            const activeCourseIds = activeCourses.map(c => c.id);
+            const recordsForDay = (attendanceHistory || []).filter(h => isSameDay(parseISO(h.date), day) && activeCourseIds.includes(h.courseId));
             const hasClasses = recordsForDay.length > 0;
             
             let bgClass = "bg-slate-50 hover:bg-slate-100 dark:bg-[#151515] dark:hover:bg-[#1a1a1a]";
@@ -139,7 +141,7 @@ export default function GlobalAttendanceCalendar({ activeCourses, attendanceHist
     </div>
 
     {/* Day Attendance Modal Section */}
-    {selectedDate && (
+    {selectedDate && typeof document !== 'undefined' && createPortal(
       <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           <div className="card-minimal w-full max-w-md bg-white dark:bg-[#111] p-0 overflow-hidden flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 max-h-[85vh]">
             {/* Header */}
@@ -218,7 +220,8 @@ export default function GlobalAttendanceCalendar({ activeCourses, attendanceHist
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
