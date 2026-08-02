@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive, User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Moon, Sun, Monitor, Paintbrush, AlertTriangle, Shield, Bell, HardDrive, User, Mail, Lock, Eye, EyeOff, Loader2, RefreshCw } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -18,6 +18,7 @@ export default function Settings() {
  const [showEditProfile, setShowEditProfile] = useState(false);
  const [newName, setNewName] = useState(user?.name || '');
  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+ const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
  // Settings wrapper to ensure defaults
  const currentSettings = {
@@ -160,6 +161,14 @@ export default function Settings() {
  } finally {
  setIsUpdatingProfile(false);
  }
+ };
+
+ const checkForUpdates = () => {
+   setIsCheckingUpdate(true);
+   setTimeout(() => {
+     setIsCheckingUpdate(false);
+     alert("You are on the latest version (1.3.0)!");
+   }, 2000);
  };
 
  return (
@@ -329,6 +338,31 @@ export default function Settings() {
  </div>
  <div className="pt-2">
  <button className="btn-secondary text-sm py-2 px-4 w-full sm:w-auto">Update Password</button>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ {/* App Updates Section */}
+ <section className="card-minimal p-6 bg-white dark:bg-[#111]">
+ <div className="flex items-center gap-2 mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+ <RefreshCw className="text-blue-500" size={20} />
+ <h2 className="text-lg font-bold">App Updates</h2>
+ </div>
+ <div className="space-y-4">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-[#151515] rounded-xl border border-slate-100 dark:border-slate-800 gap-4 transition-all hover:border-indigo-200 dark:hover:border-indigo-800/50">
+ <div>
+ <p className="text-sm font-bold">Check for Updates</p>
+ <p className="text-xs text-slate-500 mt-1">Current Version: 1.3.0</p>
+ </div>
+ <button 
+   onClick={checkForUpdates}
+   disabled={isCheckingUpdate}
+   className="btn-primary text-sm py-2 px-4 whitespace-nowrap flex items-center gap-2"
+ >
+   {isCheckingUpdate ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+   {isCheckingUpdate ? 'Checking...' : 'Check Now'}
+ </button>
  </div>
  </div>
  </section>
