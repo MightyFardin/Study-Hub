@@ -340,7 +340,6 @@ export default function Settings() {
  <button className="btn-secondary text-sm py-2 px-4 w-full sm:w-auto">Update Password</button>
  </div>
  </div>
- </div>
  </section>
 
  {/* App Updates Section */}
